@@ -370,8 +370,17 @@ function pantallaLogin(modo){
     }
     const email = document.getElementById("le").value.trim(), password = document.getElementById("lp").value;
     if (!email || !password) return err("Escribe tu email y tu contraseña.");
-    const { error } = await sb.auth.signInWithPassword({ email, password });
-    if (error) return err("Email o contraseña incorrectos.");
+    let error;
+    try { ({ error } = await sb.auth.signInWithPassword({ email, password })); }
+    catch(x){ return err("No se puede conectar con Supabase. Revisa la URL de config.js."); }
+    if (error) {
+      const m = (error.message || "").toLowerCase();
+      if (m.includes("invalid login")) return err("Email o contraseña incorrectos.");
+      if (m.includes("not confirmed")) return err("Tu usuario no está confirmado. En Supabase, vuelve a crearlo marcando Auto Confirm User.");
+      if (m.includes("api key") || m.includes("apikey") || error.status === 401) return err("La clave de config.js no es correcta. Vuelve a copiar la Publishable key.");
+      if (m.includes("fetch") || m.includes("network") || !error.status) return err("No se puede conectar con Supabase. Revisa la URL de config.js.");
+      return err("Error de Supabase: " + error.message);
+    }
     arrancar();
   };
   const olv = document.getElementById("lolv");

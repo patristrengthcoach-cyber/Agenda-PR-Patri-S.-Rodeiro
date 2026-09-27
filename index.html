@@ -39,6 +39,7 @@
   --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.25);
 }
 *,*::before,*::after{box-sizing:inherit}
+[hidden]{display:none !important}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 var(--font);-webkit-font-smoothing:antialiased;font-feature-settings:"tnum" 1}
 button,input,select,textarea{font:inherit;color:inherit}
@@ -330,7 +331,14 @@ function setSync(t, ok){ document.getElementById("sync").textContent = t; docume
 async function cargarTodo(){
   const res = await Promise.all([...TABLAS, "ajustes"].map(t => sb.from(t).select("id,data")));
   const err = res.find(r => r.error);
-  if (err) { setSync("Sin conexión con tus datos", false); toast("No se han podido cargar los datos."); return; }
+  if (err) {
+    setSync("Sin conexión con tus datos", false);
+    const m = (err.error.message || "") + (err.error.code ? " (" + err.error.code + ")" : "");
+    const pista = /does not exist|42P01|PGRST205|schema cache/i.test(m) ? " Faltan las tablas: ejecuta supabase.sql en este proyecto."
+      : /permission|42501/i.test(m) ? " Faltan permisos: vuelve a ejecutar supabase.sql."
+      : /jwt|api key/i.test(m) ? " Revisa la clave de config.js." : "";
+    toastLargo("No se han podido cargar los datos." + pista + " Detalle: " + m); return;
+  }
   TABLAS.forEach((t,i) => { const o = {}; res[i].data.forEach(r => { o[r.id] = r.data; }); S[t] = o; });
   const copia = res[2].data.find(r => r.id === "copia"); copiaCompartida = copia ? copia.data : null;
   setSync("Sincronizado", true); render();
@@ -799,6 +807,7 @@ document.getElementById("fileRestore").addEventListener("change", async e => {
   } catch(_){ toast("La restauración se ha cortado. Vuelve a restaurar la misma copia."); }
 });
 
+function toastLargo(t){ toast(t); clearTimeout(tt); tt = setTimeout(() => { const el = document.querySelector(".toast"); if (el) el.remove(); }, 15000); }
 let tt;
 function toast(t){ let el = document.querySelector(".toast"); if (!el){ el = document.createElement("div"); el.className = "toast"; el.setAttribute("role","status"); document.body.appendChild(el); } el.textContent = t; clearTimeout(tt); tt = setTimeout(() => el.remove(), 2800); }
 

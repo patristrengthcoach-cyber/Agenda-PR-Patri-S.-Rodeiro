@@ -238,7 +238,8 @@ tr:last-child td{border-bottom:0}
 .check{display:flex;align-items:center;gap:10px;font-weight:600;padding:10px 12px;border:1px solid var(--line);border-radius:9px;margin-bottom:14px}
 .check input{width:20px;height:20px;accent-color:var(--green)}
 .msgbox{background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:14px;font-size:14px;white-space:pre-wrap;margin-bottom:12px}
-.msgs{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.msgs{display:grid;grid-template-columns:1fr;gap:8px}
+@media (min-width:520px){.msgs{grid-template-columns:1fr 1fr}}
 .msgs .card{border:1px solid var(--line);border-radius:11px;padding:10px 12px}
 .msgs .card b{display:block;font-size:13px;margin-bottom:7px}
 .msgs .card .acts{justify-content:flex-start}
@@ -282,6 +283,7 @@ const IC = {
   check:'<path d="m5 12.5 4.5 4.5L19 7.5"/>', down:'<path d="M12 4v11M7 10l5 5 5-5M4 20h16"/>',
   up:'<path d="M12 16V5M7 10l5-5 5 5M4 20h16"/>', repeat:'<path d="M17 2l3 3-3 3"/><path d="M4 11V9a4 4 0 0 1 4-4h12M7 22l-3-3 3-3"/><path d="M20 13v2a4 4 0 0 1-4 4H4"/>',
   bell:'<path d="M6 8a6 6 0 1 1 12 0c0 7 3 8 3 8H3s3-1 3-8"/><path d="M10.3 20a1.9 1.9 0 0 0 3.4 0"/>',
+  mail:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3.5 7 8.5 6 8.5-6"/>',
   send:'<path d="M21 3 10 14M21 3l-7 18-4-7-7-4z"/>', search:'<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>'
 };
 const ic = k => `<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${IC[k]}</svg>`;
@@ -321,7 +323,13 @@ const slotsFor = date => { const o=[]; for (let m=540; m+DURACION<=endMin(date);
 const timeOptions = date => { const o=[]; const e = endMin(date) || 21*60; for (let m=540; m+DURACION<=e; m+=15) o.push(fromMin(m)); return o; };
 
 /* ---------- Estado y guardado ---------- */
-let S = { clientes:{}, sesiones:{} };
+const TARIFAS_INICIALES = [
+  { id:"t-val", nombre:"Valoración", sesiones:1, precio:60 },
+  { id:"t-suelta", nombre:"Sesión suelta", sesiones:1, precio:40 },
+  { id:"t-b4", nombre:"Bono 4 sesiones", sesiones:4, precio:160 },
+  { id:"t-online", nombre:"Online (4 sesiones)", sesiones:4, precio:40 }
+];
+let S = { clientes:{}, sesiones:{}, tarifas: TARIFAS_INICIALES.slice() };
 let me = { id:null, name:"" }, copiaCompartida = null;
 const ui = { tab:"hoy", week: mondayOf(new Date()), day: todayStr(), month: todayStr().slice(0,7), q:"" };
 if (parse(ui.day).getDay() === 0) { ui.week = addDays(ui.week,7); ui.day = ymd(ui.week); }
@@ -354,13 +362,14 @@ async function cargarTodo(){
     toastLargo("No se han podido cargar los datos." + pista + " Detalle: " + m); return;
   }
   TABLAS.forEach((t,i) => { const o = {}; res[i].data.forEach(r => { o[r.id] = r.data; }); S[t] = o; });
+  const tar = res[2].data.find(r => r.id === "tarifas"); S.tarifas = tar && Array.isArray(tar.data.lista) ? tar.data.lista : TARIFAS_INICIALES.slice();
   const copia = res[2].data.find(r => r.id === "copia"); copiaCompartida = copia ? copia.data : null;
   setSync("Sincronizado", true); render();
 }
 function escuchar(){
   const ch = sb.channel("agenda");
   [...TABLAS, "ajustes"].forEach(t => ch.on("postgres_changes", { event:"*", schema:"public", table:t }, p => {
-    if (t === "ajustes") { if ((p.new && p.new.id) === "copia") copiaCompartida = p.new.data; render(); return; }
+    if (t === "ajustes") { const nid = p.new && p.new.id; if (nid === "copia") copiaCompartida = p.new.data; if (nid === "tarifas") S.tarifas = p.new.data.lista || []; render(); return; }
     if (p.eventType === "DELETE") delete S[t][p.old.id]; else S[t][p.new.id] = p.new.data;
     render();
   }));
@@ -456,13 +465,18 @@ const cobrable = s => ESTADOS[s.estado]?.cobra;
 const delDia = f => ses().filter(s => s.fecha === f).sort(byTime);
 function numEnMes(s){ const l = ses().filter(x => x.clienteId === s.clienteId && mkey(x.fecha) === mkey(s.fecha) && activa(x)).sort(byTime); return { n: l.findIndex(x => x.id === s.id)+1, total: l.length }; }
 function maxSeguidas(f){ const l = delDia(f).filter(activa).map(s => toMin(s.hora)); let best = l.length?1:0, run = 1; for (let i=1;i<l.length;i++){ if (l[i]-l[i-1] <= DURACION){ run++; best = Math.max(best,run); } else run = 1; } return best; }
+const eur = n => (Number(n)||0).toLocaleString("es-ES", { minimumFractionDigits: Number(n) % 1 ? 2 : 0, maximumFractionDigits: 2 }) + " €";
+const tarifaDe = cid => { const c = S.clientes[cid]; return c && c.tarifaId ? S.tarifas.find(t => t.id === c.tarifaId) : null; };
+function lineaTarifa(cid){ const t = tarifaDe(cid); if (!t) return ""; return t.sesiones > 1 ? `Tarifa: ${t.nombre} · ${eur(t.precio)}` : `Precio: ${eur(t.precio)} (${t.nombre})`; }
+async function guardarTarifas(){ render(); const { error } = await sb.from("ajustes").upsert({ id:"tarifas", data:{ lista:S.tarifas } }); if (error) toast("No se han podido guardar las tarifas."); }
 let cacheNum = {};
 function anteriorActiva(clienteId, fecha, hora, excluir){ const k = fecha+hora; return ses().filter(x => x.clienteId === clienteId && x.id !== excluir && activa(x) && (x.fecha+x.hora) < k).sort(byTime).pop(); }
 function sugerirNum(clienteId, fecha, hora, excluir){
   const prev = anteriorActiva(clienteId, fecha, hora, excluir);
-  if (!prev) return { num:1, total:null };
+  const t = tarifaDe(clienteId), tt = t && t.sesiones > 1 ? t.sesiones : null;
+  if (!prev) return { num:1, total:tt };
   const e = numEf(prev);
-  if (e.total && e.num >= e.total) return { num:1, total:e.total };
+  if (e.total && e.num >= e.total) return { num:1, total: tt || e.total };
   return { num:e.num+1, total:e.total };
 }
 function numEf(s){
@@ -477,7 +491,7 @@ function siguienteLaborable(){ let d = addDays(new Date(),1); if (d.getDay() ===
 function msgReserva(s){
   const c = cli(s.clienteId), e = numEf(s);
   const linea = e.total ? `Es tu sesión ${e.num} de ${e.total}.` : `Es tu sesión nº ${e.num}.`;
-  return `Hola ${c.nombre.split(" ")[0]}! 👋 Te confirmo tu sesión:\n\n📅 ${cap(fechaLarga(s.fecha))} a las ${s.hora}\n📍 ${LUGAR}\n\n${linea}\n\nSi no puedes venir, avísame con al menos 24 h de antelación. Si no avisas o no vienes, se aplicará un recargo.\n\n${FIRMA}`;
+  return `Hola ${c.nombre.split(" ")[0]}! 👋 Te confirmo tu sesión:\n\n📅 ${cap(fechaLarga(s.fecha))} a las ${s.hora}\n📍 ${LUGAR}${lineaTarifa(s.clienteId) ? "\n💶 " + lineaTarifa(s.clienteId) : ""}\n\n${linea}\n\nSi no puedes venir, avísame con al menos 24 h de antelación. Si no avisas o no vienes, se aplicará un recargo.\n\n${FIRMA}`;
 }
 function msgRecordatorio(s){
   const c = cli(s.clienteId), d = parse(s.fecha), manana = s.fecha === ymd(addDays(new Date(),1));
@@ -490,7 +504,33 @@ function msgSemana(cid, lunes){
   const l = ses().filter(s => s.clienteId === cid && s.fecha >= ini && s.fecha <= fin && activa(s)).sort(byTime);
   if (!l.length) return "";
   const lineas = l.map(s => { const d = parse(s.fecha); return `• ${cap(DIAS[d.getDay()])} ${d.getDate()} · ${s.hora} (sesión ${etiquetaNum(s)})`; }).join("\n");
-  return `Hola ${c.nombre.split(" ")[0]}! 👋 Estas son tus sesiones de la semana:\n\n${lineas}\n\n📍 ${LUGAR}\n\nSi no puedes venir a alguna, avísame con al menos 24 h de antelación. Si no avisas o no vienes, se aplicará un recargo.\n\n${FIRMA}`;
+  return `Hola ${c.nombre.split(" ")[0]}! 👋 Estas son tus sesiones de la semana:\n\n${lineas}\n\n📍 ${LUGAR}${lineaTarifa(cid) ? "\n💶 " + lineaTarifa(cid) : ""}\n\nSi no puedes venir a alguna, avísame con al menos 24 h de antelación. Si no avisas o no vienes, se aplicará un recargo.\n\n${FIRMA}`;
+}
+function emailReserva(s){
+  const c = cli(s.clienteId), e = numEf(s), d = parse(s.fecha), tar = lineaTarifa(s.clienteId);
+  return { subject:`Reserva confirmada · ${cap(DIAS[d.getDay()])} ${d.getDate()} de ${MESES[d.getMonth()]}, ${s.hora}`,
+    body:`Hola ${c.nombre.split(" ")[0]}:\n\nTe confirmo tu próxima sesión de readaptación:\n\n· Día: ${cap(fechaLarga(s.fecha))}\n· Hora: ${s.hora}\n· Lugar: ${LUGAR}\n· Sesión: ${e.total ? `${e.num} de ${e.total}` : `nº ${e.num}`}${tar ? `\n· ${tar}` : ""}\n\nSi no puedes venir, avísame con al menos 24 horas de antelación respondiendo a este correo. Si no avisas o no vienes, se aplicará un recargo.\n\nUn saludo,\n` };
+}
+function emailRecordatorio(s){
+  const c = cli(s.clienteId), d = parse(s.fecha), manana = s.fecha === ymd(addDays(new Date(),1));
+  const cuando = manana ? `mañana, ${DIAS[d.getDay()]} ${d.getDate()},` : `del ${DIAS[d.getDay()]} ${d.getDate()}`;
+  const limite = manana ? `hoy antes de las ${s.hora}` : `antes del ${DIAS[addDays(d,-1).getDay()]} a las ${s.hora}`;
+  return { subject:`Recordatorio: tu sesión ${manana ? "de mañana" : "del " + DIAS[d.getDay()]} a las ${s.hora}`,
+    body:`Hola ${c.nombre.split(" ")[0]}:\n\nTe recuerdo tu sesión ${cuando} a las ${s.hora} en ${LUGAR}.\n\nSi necesitas cancelar, avísame ${limite} respondiendo a este correo para evitar el recargo.\n\n¡Nos vemos!\n` };
+}
+function emailSemana(cid, lunes){
+  const c = cli(cid), ini = ymd(lunes), fin = ymd(addDays(lunes,6)), tar = lineaTarifa(cid);
+  const l = ses().filter(s => s.clienteId === cid && s.fecha >= ini && s.fecha <= fin && activa(s)).sort(byTime);
+  if (!l.length) return null;
+  const lineas = l.map(s => { const d = parse(s.fecha); return `· ${cap(DIAS[d.getDay()])} ${d.getDate()} de ${MESES[d.getMonth()]}, ${s.hora} (sesión ${etiquetaNum(s)})`; }).join("\n");
+  return { subject:`Tus sesiones de la semana del ${lunes.getDate()} de ${MESES[lunes.getMonth()]}`,
+    body:`Hola ${c.nombre.split(" ")[0]}:\n\nEstas son tus sesiones de la semana en ${LUGAR}:\n\n${lineas}${tar ? `\n\n${tar}` : ""}\n\nSi no puedes venir a alguna, avísame con al menos 24 horas de antelación respondiendo a este correo. Si no avisas o no vienes, se aplicará un recargo.\n\nUn saludo,\n` };
+}
+function enviarEmail(cid, m, done){
+  const c = cli(cid);
+  if (!c.email) return toast("Este cliente no tiene email. Añádelo en Clientes.");
+  const url = `mailto:${encodeURIComponent(c.email)}?subject=${encodeURIComponent(m.subject)}&body=${encodeURIComponent(m.body)}`;
+  window.location.href = url; if (done) done();
 }
 const waLink = (tel, t) => { const p = phoneIntl(tel); return `https://wa.me/${p}?text=${encodeURIComponent(t)}`; };
 async function copiar(t){
@@ -575,10 +615,10 @@ function vHoy(){
   h += `<div class="grid2">`;
   h += panel("Agenda de hoy", deHoy.length, deHoy.length ? deHoy.map(s => itemSes(s, `<button class="btn small" data-open="${s.id}">Abrir</button>`)).join("") : vacio("No tienes sesiones hoy."));
   h += panel(`Recordatorios · ${DIAS[parse(sig).getDay()]} ${parse(sig).getDate()}`, recPend, recs.length ? recs.map(s => itemSes(s,
-      s.recordatorioEnviado ? `<span class="pill paid">Enviado</span><button class="btn small ghost" data-copy="rec" data-id="${s.id}">${ic("copy")}</button>` : `<button class="btn small wa" data-wa="rec" data-id="${s.id}">${ic("wa")}WhatsApp</button><button class="btn small icon" data-copy="rec" data-id="${s.id}" aria-label="Copiar">${ic("copy")}</button>`)).join("") : vacio("No hay sesiones ese día."), "Envíalos hoy", true, "p-recs");
+      s.recordatorioEnviado ? `<span class="pill paid">Enviado</span><button class="btn small ghost" data-copy="rec" data-id="${s.id}">${ic("copy")}</button>` : `<button class="btn small wa" data-wa="rec" data-id="${s.id}">${ic("wa")}WhatsApp</button>${cli(s.clienteId).email ? `<button class="btn small icon" data-mail="rec" data-id="${s.id}" aria-label="Enviar por email">${ic("mail")}</button>` : ""}<button class="btn small icon" data-copy="rec" data-id="${s.id}" aria-label="Copiar">${ic("copy")}</button>`)).join("") : vacio("No hay sesiones ese día."), "Envíalos hoy", true, "p-recs");
   h += `</div><div style="height:16px"></div><div class="grid2">`;
   h += panel("Reservas sin enviar", sinReserva.length, sinReserva.length ? sinReserva.map(s => itemSes(s,
-      `<button class="btn small wa" data-wa="res" data-id="${s.id}">${ic("wa")}WhatsApp</button><button class="btn small icon" data-copy="res" data-id="${s.id}" aria-label="Copiar">${ic("copy")}</button><button class="btn small ghost" data-flag="reservaEnviada" data-id="${s.id}">Ya enviada</button>`,
+      `<button class="btn small wa" data-wa="res" data-id="${s.id}">${ic("wa")}WhatsApp</button>${cli(s.clienteId).email ? `<button class="btn small icon" data-mail="res" data-id="${s.id}" aria-label="Enviar por email">${ic("mail")}</button>` : ""}<button class="btn small icon" data-copy="res" data-id="${s.id}" aria-label="Copiar">${ic("copy")}</button><button class="btn small ghost" data-flag="reservaEnviada" data-id="${s.id}">Ya enviada</button>`,
       `${DABR[parse(s.fecha).getDay()]} ${parse(s.fecha).getDate()}`)).join("") : vacio("Todas las reservas están enviadas."), null, true, "p-reservas");
   const ids = Object.keys(deben).sort(byName);
   h += panel("Pendiente de pago", ids.length, ids.length ? ids.map(id => `<div class="item"><div class="avatar">${esc(iniciales(cli(id).nombre))}</div><div class="who"><b>${esc(cli(id).nombre)}</b><span>${deben[id].length} ${deben[id].length===1?"sesión":"sesiones"} sin pagar</span></div><div class="acts"><button class="btn small" data-pagar="${id}">${ic("check")}Marcar pagado</button></div></div>`).join("") : vacio("Nadie te debe nada."), null, true);
@@ -643,17 +683,44 @@ function vSemana(){
 function vClientes(){
   const mes = todayStr().slice(0,7), q = ui.q.trim().toLowerCase();
   const todos = Object.values(S.clientes).sort((a,b) => a.nombre.localeCompare(b.nombre,"es"));
-  const l = todos.filter(c => !q || c.nombre.toLowerCase().includes(q) || (c.telefono||"").includes(q));
+  const l = todos.filter(c => !q || c.nombre.toLowerCase().includes(q) || (c.telefono||"").includes(q) || (c.email||"").toLowerCase().includes(q));
   let h = `<div class="phead"><div><h1>Clientes</h1><p>${todos.length} ${todos.length===1?"cliente":"clientes"}</p></div><div class="pactions">
-    <label class="search">${ic("search")}<input id="qsearch" placeholder="Buscar por nombre o móvil" value="${esc(ui.q)}" aria-label="Buscar cliente"></label>
+    <label class="search">${ic("search")}<input id="qsearch" placeholder="Buscar por nombre, móvil o email" value="${esc(ui.q)}" aria-label="Buscar cliente"></label>
     <button class="btn primary" data-cliente="">${ic("plus")}Nuevo cliente</button></div></div>`;
-  if (!todos.length) return h + `<section class="panel"><div class="empty">${ic("clientes")}Aún no tienes clientes. Añade el primero con su nombre y su móvil.</div></section>`;
+  if (!todos.length) return h + `<section class="panel"><div class="empty">${ic("clientes")}Aún no tienes clientes. Añade el primero con su nombre y su móvil.</div></section>` + panelTarifas();
   const rows = l.map(c => { const suyas = ses().filter(s => s.clienteId === c.id);
     const enMes = suyas.filter(s => mkey(s.fecha) === mes && activa(s)).length, debe = suyas.filter(s => cobrable(s) && !s.pagado).length;
     const prox = suyas.filter(s => s.fecha >= todayStr() && activa(s)).sort(byTime)[0];
-    return `<tr><td><div style="display:flex;align-items:center;gap:11px"><div class="avatar">${esc(iniciales(c.nombre))}</div><b>${esc(c.nombre)}</b></div></td><td>${esc(c.telefono)||"–"}</td><td class="n">${enMes}</td><td>${prox ? `${cap(DABR[parse(prox.fecha).getDay()])} ${parse(prox.fecha).getDate()} · ${prox.hora}` : "–"}</td><td>${debe ? `<span class="pill unpaid">${debe} sin pagar</span>` : `<span class="pill paid">Al día</span>`}</td><td class="n"><button class="btn small" data-cliente="${c.id}">Abrir</button></td></tr>`; }).join("");
-  h += `<section class="panel"><div class="tbl"><table><thead><tr><th>Cliente</th><th>Móvil</th><th class="n">Sesiones este mes</th><th>Próxima</th><th>Pagos</th><th></th></tr></thead><tbody>${rows || `<tr><td colspan="6" class="empty">Ningún cliente coincide con la búsqueda.</td></tr>`}</tbody></table></div></section>`;
-  return h;
+    return `<tr><td><div style="display:flex;align-items:center;gap:11px"><div class="avatar">${esc(iniciales(c.nombre))}</div><b>${esc(c.nombre)}</b></div></td><td>${esc(c.telefono)||"–"}</td><td>${tarifaDe(c.id) ? esc(tarifaDe(c.id).nombre) : `<span style="color:var(--muted)">–</span>`}</td><td class="n">${enMes}</td><td>${prox ? `${cap(DABR[parse(prox.fecha).getDay()])} ${parse(prox.fecha).getDate()} · ${prox.hora}` : "–"}</td><td>${debe ? `<span class="pill unpaid">${debe} sin pagar</span>` : `<span class="pill paid">Al día</span>`}</td><td class="n"><button class="btn small" data-cliente="${c.id}">Abrir</button></td></tr>`; }).join("");
+  h += `<section class="panel"><div class="tbl"><table><thead><tr><th>Cliente</th><th>Móvil</th><th>Tarifa</th><th class="n">Sesiones este mes</th><th>Próxima</th><th>Pagos</th><th></th></tr></thead><tbody>${rows || `<tr><td colspan="7" class="empty">Ningún cliente coincide con la búsqueda.</td></tr>`}</tbody></table></div></section>`;
+  return h + panelTarifas();
+}
+function panelTarifas(){
+  const body = S.tarifas.length ? S.tarifas.map(t => { const n = Object.values(S.clientes).filter(c => c.tarifaId === t.id).length;
+    return `<div class="item"><div class="who"><b>${esc(t.nombre)}</b><span>${t.sesiones > 1 ? `${t.sesiones} sesiones · ${eur(t.precio/t.sesiones)} por sesión` : "Precio por sesión"} · ${n} ${n===1?"cliente":"clientes"}</span></div><div style="font-weight:800;font-size:16px">${eur(t.precio)}</div><div class="acts"><button class="btn small" data-tarifa="${t.id}">Editar</button></div></div>`; }).join("") : vacio("Aún no tienes tarifas.");
+  return `<section class="panel"><div class="ph"><h2>Tarifas <span class="count">${S.tarifas.length}</span></h2><button class="btn small" data-tarifa="">${ic("plus")}Nueva tarifa</button></div><div class="pb">${body}</div></section>`;
+}
+function modalTarifa(id){
+  const t = id ? S.tarifas.find(x => x.id === id) : { nombre:"", sesiones:1, precio:"" };
+  openModal(id ? "Editar tarifa" : "Nueva tarifa", "Se muestra en las reservas de los clientes que la tengan",
+    `<div class="f"><label for="tn">Nombre</label><input id="tn" value="${esc(t.nombre)}" placeholder="Ej.: Bono 8 sesiones"></div>
+     <div class="two"><div class="f"><label for="ts">Sesiones incluidas</label><input id="ts" type="number" min="1" inputmode="numeric" value="${t.sesiones}"><div class="hint">1 = precio por sesión. Más de 1 = bono.</div></div>
+     <div class="f"><label for="tp">Precio (€)</label><input id="tp" type="number" min="0" step="0.01" inputmode="decimal" value="${t.precio}"><div class="hint">Del bono completo si es un bono.</div></div></div>`,
+    `${id ? `<button class="btn danger" id="tdel">Eliminar</button>` : "<span></span>"}<div class="acts"><button class="btn" data-close="1">Cancelar</button><button class="btn primary" id="tsave">Guardar</button></div>`);
+  const $ = q => document.getElementById(q);
+  $("tsave").onclick = () => {
+    const nombre = $("tn").value.trim(), sesiones = parseInt($("ts").value, 10), precio = parseFloat(String($("tp").value).replace(",", "."));
+    if (!nombre) return toast("Pon un nombre"); if (!sesiones || sesiones < 1) return toast("Revisa las sesiones incluidas"); if (isNaN(precio) || precio < 0) return toast("Revisa el precio");
+    const nueva = { id: id || "t-" + uid(), nombre, sesiones, precio };
+    S.tarifas = id ? S.tarifas.map(x => x.id === id ? nueva : x) : [...S.tarifas, nueva];
+    closeModal(); guardarTarifas();
+  };
+  if (id) $("tdel").onclick = () => {
+    const n = Object.values(S.clientes).filter(c => c.tarifaId === id).length;
+    if (n) return toast(`La usan ${n} ${n===1?"cliente":"clientes"}. Cámbiales la tarifa antes de eliminarla.`);
+    if (!confirm("¿Eliminar esta tarifa?")) return;
+    S.tarifas = S.tarifas.filter(x => x.id !== id); closeModal(); guardarTarifas();
+  };
 }
 document.addEventListener("input", e => { if (e.target.id === "qsearch"){ ui.q = e.target.value; render(); } });
 
@@ -708,8 +775,8 @@ function modalSesion(id, preFecha, preHora){
   b += `<label class="check"><input type="checkbox" id="mp" ${s.pagado?"checked":""}> Pagado</label>
     <div class="f"><label for="mn">Nota (opcional)</label><input id="mn" value="${esc(s.nota)}" placeholder="Ej.: paga en efectivo el viernes"><div class="hint">No apuntes aquí datos de salud.</div></div>`;
   if (id) b += `<div class="f"><span class="flabel">Mensajes de WhatsApp</span><div class="msgs">
-      <div class="card"><b>Reserva ${s.reservaEnviada?'<span class="pill paid">Enviada</span>':""}</b><div class="acts"><button class="btn small wa" id="wres">${ic("wa")}Enviar</button><button class="btn small icon" id="cres" aria-label="Copiar reserva">${ic("copy")}</button></div></div>
-      <div class="card"><b>Recordatorio ${s.recordatorioEnviado?'<span class="pill paid">Enviado</span>':""}</b><div class="acts"><button class="btn small wa" id="wrec">${ic("wa")}Enviar</button><button class="btn small icon" id="crec" aria-label="Copiar recordatorio">${ic("copy")}</button></div></div></div></div>`;
+      <div class="card"><b>Reserva ${s.reservaEnviada?'<span class="pill paid">Enviada</span>':""}</b><div class="acts"><button class="btn small wa" id="wres">${ic("wa")}WhatsApp</button><button class="btn small" id="eres">${ic("mail")}Email</button><button class="btn small icon" id="cres" aria-label="Copiar reserva">${ic("copy")}</button></div></div>
+      <div class="card"><b>Recordatorio ${s.recordatorioEnviado?'<span class="pill paid">Enviado</span>':""}</b><div class="acts"><button class="btn small wa" id="wrec">${ic("wa")}WhatsApp</button><button class="btn small" id="erec">${ic("mail")}Email</button><button class="btn small icon" id="crec" aria-label="Copiar recordatorio">${ic("copy")}</button></div></div></div></div>`;
   if (id && s.estado === "programada" && s.fecha >= todayStr()) {
     const w = [];
     if (!s.reservaEnviada) w.push("la reserva");
@@ -731,6 +798,8 @@ function modalSesion(id, preFecha, preHora){
     const tel = cli(s.clienteId).telefono;
     $("wres").onclick = () => enviar(tel, msgReserva(S.sesiones[id]), () => patch("sesiones", id, {reservaEnviada:true}));
     $("cres").onclick = () => { copiar(msgReserva(S.sesiones[id])); patch("sesiones", id, {reservaEnviada:true}); };
+    $("eres").onclick = () => enviarEmail(s.clienteId, emailReserva(S.sesiones[id]), () => patch("sesiones", id, {reservaEnviada:true}));
+    $("erec").onclick = () => enviarEmail(s.clienteId, emailRecordatorio(S.sesiones[id]), () => patch("sesiones", id, {recordatorioEnviado:true}));
     $("wrec").onclick = () => enviar(tel, msgRecordatorio(S.sesiones[id]), () => patch("sesiones", id, {recordatorioEnviado:true}));
     $("crec").onclick = () => { copiar(msgRecordatorio(S.sesiones[id])); patch("sesiones", id, {recordatorioEnviado:true}); };
     $("mdel").onclick = () => { if (confirm("¿Eliminar esta sesión? Si el cliente canceló, mejor márcala como cancelada para que quede registrada.")) { remove("sesiones", id); closeModal(); } };
@@ -757,30 +826,35 @@ function modalSesion(id, preFecha, preHora){
 
 function modalEnviar(id){
   const s = S.sesiones[id], c = cli(s.clienteId), t = msgReserva(s);
-  openModal("Sesión guardada", `Envía la reserva a ${esc(c.nombre)}`, `<div class="msgbox">${esc(t)}</div>${c.telefono?"":`<div class="alert">Este cliente no tiene móvil guardado. Copia el mensaje o añádelo en Clientes.</div>`}`,
-    `<button class="btn ghost" data-close="1">Ahora no</button><div class="acts"><button class="btn" id="ec">${ic("copy")}Copiar</button><button class="btn wa" id="ew">${ic("wa")}Enviar por WhatsApp</button></div>`);
+  openModal("Sesión guardada", `Envía la reserva a ${esc(c.nombre)}`, `<div class="msgbox">${esc(t)}</div>${c.telefono || c.email ? "" : `<div class="alert">Este cliente no tiene móvil ni email guardados. Copia el mensaje o añádelos en Clientes.</div>`}`,
+    `<button class="btn ghost" data-close="1">Ahora no</button><div class="acts"><button class="btn icon" id="ec" aria-label="Copiar">${ic("copy")}</button>${c.email ? `<button class="btn" id="em">${ic("mail")}Email</button>` : ""}<button class="btn wa" id="ew">${ic("wa")}WhatsApp</button></div>`);
+  if (c.email) document.getElementById("em").onclick = () => { enviarEmail(s.clienteId, emailReserva(S.sesiones[id]), () => patch("sesiones", id, {reservaEnviada:true})); closeModal(); };
   document.getElementById("ec").onclick = () => { copiar(t); patch("sesiones", id, {reservaEnviada:true}); closeModal(); };
   document.getElementById("ew").onclick = () => { enviar(c.telefono, t, () => patch("sesiones", id, {reservaEnviada:true})); closeModal(); };
 }
 
 function modalCliente(id){
-  const c = id ? S.clientes[id] : { nombre:"", telefono:"", nota:"" }, mes = todayStr().slice(0,7);
+  const c = id ? S.clientes[id] : { nombre:"", telefono:"", email:"", tarifaId:"", nota:"" }, mes = todayStr().slice(0,7);
   const suyas = id ? ses().filter(s => s.clienteId === id).sort(byTime) : [];
   const delMes = suyas.filter(s => mkey(s.fecha) === mes), proximas = suyas.filter(s => s.fecha >= todayStr() && activa(s));
   let b = `<div class="f"><label for="cn">Nombre</label><input id="cn" value="${esc(c.nombre)}"></div>
     <div class="two"><div class="f"><label for="ct">Móvil</label><input id="ct" inputmode="tel" value="${esc(c.telefono)}" placeholder="600 123 456"><div class="hint">Sin prefijo se entiende +34.</div></div>
+    <div class="f"><label for="cem">Email</label><input id="cem" type="email" inputmode="email" autocomplete="off" value="${esc(c.email || "")}" placeholder="nombre@correo.com"></div></div>
+    <div class="two"><div class="f"><label for="cta">Tarifa</label><select id="cta"><option value="">Sin tarifa</option>${S.tarifas.map(t => `<option value="${t.id}" ${t.id===c.tarifaId?"selected":""}>${esc(t.nombre)} · ${eur(t.precio)}</option>`).join("")}</select><div class="hint">Aparece en la reserva. Las tarifas se editan en Clientes.</div></div>
     <div class="f"><label for="cno">Nota (opcional)</label><input id="cno" value="${esc(c.nota)}" placeholder="Ej.: prefiere tardes"><div class="hint">Sin datos de salud.</div></div></div>`;
   if (id){
     b += `<div class="f"><span class="flabel">Sesiones de ${MESES[Number(mes.slice(5))-1]}</span><div class="hist">${delMes.length ? delMes.map(s => `<div class="item"><div class="time">${s.hora}<small>${DABR[parse(s.fecha).getDay()]} ${parse(s.fecha).getDate()}</small></div><div class="who"><b style="font-weight:600;font-size:13.5px">Sesión ${etiquetaNum(s)}</b><span>${pills(s)||'<span class="pill prog">Programada</span>'}</span></div></div>`).join("") : `<p style="color:var(--muted);font-size:14px;margin:4px 0">Sin sesiones este mes.</p>`}</div></div>`;
-    b += `<button class="btn wa" id="cplan" ${proximas.length?"":"disabled"}>${ic("wa")}Enviar sus sesiones de la semana</button>`;
+    b += `<div class="acts" style="justify-content:flex-start"><button class="btn wa" id="cplan" ${proximas.length?"":"disabled"}>${ic("wa")}Sesiones de la semana</button>${c.email ? `<button class="btn" id="cplanm" ${proximas.length?"":"disabled"}>${ic("mail")}Por email</button>` : ""}</div>`;
   }
   const foot = `${id?`<button class="btn danger" id="cdel">Eliminar</button>`:"<span></span>"}<div class="acts"><button class="btn" data-close="1">Cancelar</button><button class="btn primary" id="csave">Guardar</button></div>`;
   openModal(id ? c.nombre : "Nuevo cliente", id ? `${suyas.filter(activa).length} sesiones registradas` : "", b, foot);
   const $ = q => document.getElementById(q);
-  $("csave").onclick = () => { const nombre = $("cn").value.trim(); if (!nombre) return toast("Escribe el nombre"); put("clientes", { ...(id ? S.clientes[id] : { id:uid() }), nombre, telefono:$("ct").value.trim(), nota:$("cno").value.trim() }); closeModal(); };
+  $("csave").onclick = () => { const nombre = $("cn").value.trim(); if (!nombre) return toast("Escribe el nombre"); const email = $("cem").value.trim(); if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return toast("Revisa el email");
+    put("clientes", { ...(id ? S.clientes[id] : { id:uid() }), nombre, telefono:$("ct").value.trim(), email, tarifaId:$("cta").value, nota:$("cno").value.trim() }); closeModal(); };
   if (id){
     $("cdel").onclick = () => { if (suyas.length) return toast("Tiene sesiones registradas. Elimínalas antes o deja el cliente."); if (confirm("¿Eliminar este cliente?")) { remove("clientes", id); closeModal(); } };
     $("cplan").onclick = () => { const t = msgSemana(id, mondayOf(parse(proximas[0].fecha))); if (t) enviar(c.telefono, t); };
+    if ($("cplanm")) $("cplanm").onclick = () => { const m = emailSemana(id, mondayOf(parse(proximas[0].fecha))); if (m) enviarEmail(id, m); };
   }
 }
 
@@ -789,11 +863,12 @@ function modalPlanSemanal(){
   const ids = [...new Set(ses().filter(s => s.fecha >= ini && s.fecha <= fin && activa(s)).map(s => s.clienteId))].sort(byName);
   const marcar = cid => ses().filter(s => s.clienteId === cid && s.fecha >= ini && s.fecha <= fin && activa(s) && !s.reservaEnviada).forEach(s => patch("sesiones", s.id, {reservaEnviada:true}));
   const body = ids.length ? ids.map(id => { const n = ses().filter(s => s.clienteId === id && s.fecha >= ini && s.fecha <= fin && activa(s)).length;
-    return `<div class="item" style="padding:10px 0"><div class="avatar">${esc(iniciales(cli(id).nombre))}</div><div class="who"><b>${esc(cli(id).nombre)}</b><span>${n} ${n===1?"sesión":"sesiones"}</span></div><div class="acts"><button class="btn small wa" data-pw="${id}">${ic("wa")}Enviar</button><button class="btn small icon" data-pc="${id}" aria-label="Copiar">${ic("copy")}</button></div></div>`; }).join("")
+    return `<div class="item" style="padding:10px 0"><div class="avatar">${esc(iniciales(cli(id).nombre))}</div><div class="who"><b>${esc(cli(id).nombre)}</b><span>${n} ${n===1?"sesión":"sesiones"}</span></div><div class="acts"><button class="btn small wa" data-pw="${id}">${ic("wa")}WhatsApp</button>${cli(id).email ? `<button class="btn small icon" data-pm="${id}" aria-label="Enviar por email">${ic("mail")}</button>` : ""}<button class="btn small icon" data-pc="${id}" aria-label="Copiar">${ic("copy")}</button></div></div>`; }).join("")
     : `<p style="color:var(--muted)">No hay sesiones esta semana.</p>`;
   openModal("Plan de la semana", "Un mensaje por cliente con todas sus sesiones", body, `<span></span><button class="btn" data-close="1">Cerrar</button>`);
   document.querySelector(".sheet").addEventListener("click", e => {
-    const w = e.target.closest("[data-pw]"), c = e.target.closest("[data-pc]");
+    const w = e.target.closest("[data-pw]"), c = e.target.closest("[data-pc]"), m = e.target.closest("[data-pm]");
+    if (m) { const id = m.dataset.pm; const em = emailSemana(id, lunes); if (em) enviarEmail(id, em, () => marcar(id)); m.innerHTML = ic("check"); }
     if (w) { const id = w.dataset.pw; enviar(cli(id).telefono, msgSemana(id, lunes), () => marcar(id)); w.innerHTML = `${ic("check")}Enviado`; }
     if (c) { const id = c.dataset.pc; copiar(msgSemana(id, lunes)); marcar(id); }
   });
@@ -807,6 +882,8 @@ document.getElementById("main").addEventListener("click", e => {
   if (d.estado) return patch("sesiones", d.id, { estado:d.estado });
   if (d.flag) return patch("sesiones", d.id, { [d.flag]:true });
   if (d.wa) { const s = S.sesiones[d.id], rec = d.wa === "rec"; return enviar(cli(s.clienteId).telefono, rec ? msgRecordatorio(s) : msgReserva(s), () => patch("sesiones", s.id, rec ? {recordatorioEnviado:true} : {reservaEnviada:true})); }
+  if (d.mail) { const s = S.sesiones[d.id], rec = d.mail === "rec"; return enviarEmail(s.clienteId, rec ? emailRecordatorio(s) : emailReserva(s), () => patch("sesiones", s.id, rec ? {recordatorioEnviado:true} : {reservaEnviada:true})); }
+  if (d.tarifa !== undefined) return modalTarifa(d.tarifa || null);
   if (d.copy) { const s = S.sesiones[d.id], rec = d.copy === "rec"; copiar(rec ? msgRecordatorio(s) : msgReserva(s)); return patch("sesiones", s.id, rec ? {recordatorioEnviado:true} : {reservaEnviada:true}); }
   if (d.pagar) { const l = ses().filter(s => s.clienteId === d.pagar && cobrable(s) && !s.pagado && (!d.mes || mkey(s.fecha) === d.mes)); l.forEach(s => patch("sesiones", s.id, {pagado:true})); return toast(`${l.length} ${l.length===1?"sesión marcada":"sesiones marcadas"} como pagadas`); }
   if (d.week !== undefined) { const n = Number(d.week); ui.week = n === 0 ? mondayOf(new Date()) : addDays(ui.week, 7*n); if (n === 0 && parse(todayStr()).getDay() === 0) ui.week = addDays(ui.week,7); ui.day = n === 0 && parse(todayStr()).getDay() !== 0 ? todayStr() : ymd(ui.week); return render(); }
@@ -841,7 +918,7 @@ async function exportar(mk){
   const l = ses().filter(s => mkey(s.fecha) === mk).sort(byTime);
   if (!l.length) return toast("No hay sesiones en este mes");
   const q = v => `"${String(v).replace(/"/g,'""')}"`;
-  const filas = [["Fecha","Hora","Cliente","Sesión","Estado","Se cobra","Pagado","Nota"].join(";")].concat(l.map(s => [s.fecha.split("-").reverse().join("/"), s.hora, q(cli(s.clienteId).nombre), etiquetaNum(s), ESTADOS[s.estado].t, cobrable(s)?"Sí":"No", s.pagado?"Sí":"No", q(s.nota||"")].join(";")));
+  const filas = [["Fecha","Hora","Cliente","Tarifa","Sesión","Estado","Se cobra","Pagado","Nota"].join(";")].concat(l.map(s => [s.fecha.split("-").reverse().join("/"), s.hora, q(cli(s.clienteId).nombre), q(tarifaDe(s.clienteId) ? tarifaDe(s.clienteId).nombre : ""), etiquetaNum(s), ESTADOS[s.estado].t, cobrable(s)?"Sí":"No", s.pagado?"Sí":"No", q(s.nota||"")].join(";")));
   await descargar(`sesiones-${mk}.csv`, "\uFEFF"+filas.join("\r\n"), "text/csv");
 }
 
@@ -849,7 +926,7 @@ async function exportar(mk){
 function ultimaCopia(){ if (copiaCompartida && copiaCompartida.fecha) return copiaCompartida.fecha; try { return localStorage.getItem("psr_ultima_copia"); } catch(e){ return null; } }
 function diasDesdeCopia(){ const u = ultimaCopia(); return u ? Math.floor((parse(todayStr()) - parse(u)) / 86400000) : null; }
 async function guardarCopia(){
-  const datos = { app:"agenda-patri", version:1, guardado:new Date().toISOString(), clientes:Object.values(S.clientes), sesiones:Object.values(S.sesiones) };
+  const datos = { app:"agenda-patri", version:1, guardado:new Date().toISOString(), clientes:Object.values(S.clientes), sesiones:Object.values(S.sesiones), tarifas:S.tarifas };
   const ok = await descargar(`agenda-patri-${todayStr()}.json`, JSON.stringify(datos, null, 1), "application/json");
   if (!ok) return;
   try { localStorage.setItem("psr_ultima_copia", todayStr()); } catch(e){}
@@ -864,7 +941,7 @@ document.getElementById("fileRestore").addEventListener("change", async e => {
   const nuevo = { clientes:{}, sesiones:{} };
   d.clientes.forEach(c => { if (c && c.id) nuevo.clientes[c.id] = c; });
   d.sesiones.forEach(s => { if (s && s.id) nuevo.sesiones[s.id] = s; });
-  const viejo = S; S = nuevo; render(); toast("Restaurando…");
+  nuevo.tarifas = S.tarifas; const viejo = S; S = nuevo; render(); toast("Restaurando…");
   try {
     for (const col of TABLAS){
       const fuera = Object.keys(viejo[col]).filter(id => !nuevo[col][id]);
@@ -872,6 +949,7 @@ document.getElementById("fileRestore").addEventListener("change", async e => {
       const filas = Object.values(nuevo[col]).map(o => ({ id:o.id, data:o }));
       for (let i=0; i<filas.length; i+=300){ const { error } = await sb.from(col).upsert(filas.slice(i,i+300)); if (error) throw error; }
     }
+    if (Array.isArray(d.tarifas)) { S.tarifas = d.tarifas; await sb.from("ajustes").upsert({ id:"tarifas", data:{ lista:S.tarifas } }); render(); }
     toast("Copia restaurada");
   } catch(_){ toast("La restauración se ha cortado. Vuelve a restaurar la misma copia."); }
 });

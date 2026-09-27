@@ -290,7 +290,10 @@ const ic = k => `<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${IC[k]}<
 
 /* ---------- Constantes ---------- */
 const CAPACIDAD = 20, DURACION = 45, MAX_SEGUIDAS = 4;
-const LUGAR = "Clínica DCF", FIRMA = "Patri S. Rodeiro · Readaptación y rendimiento";
+const LUGAR = "Clínica DCF · Mugardos", FIRMA = "Patri S. Rodeiro · Readaptación y rendimiento";
+// Texto de la política de cancelación (se usa en WhatsApp y email)
+const CANCELACION = "Si no avisas o no vienes, se aplicará un recargo.";
+const EMAIL_API = (window.CONFIG && CONFIG.EMAIL_API) || "";
 const DIAS = ["domingo","lunes","martes","miércoles","jueves","viernes","sábado"];
 const DABR = ["dom","lun","mar","mié","jue","vie","sáb"];
 const MESES = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
@@ -323,13 +326,28 @@ const slotsFor = date => { const o=[]; for (let m=540; m+DURACION<=endMin(date);
 const timeOptions = date => { const o=[]; const e = endMin(date) || 21*60; for (let m=540; m+DURACION<=e; m+=15) o.push(fromMin(m)); return o; };
 
 /* ---------- Estado y guardado ---------- */
-const TARIFAS_INICIALES = [
-  { id:"t-val", nombre:"Valoración", sesiones:1, precio:60 },
-  { id:"t-suelta", nombre:"Sesión suelta", sesiones:1, precio:40 },
-  { id:"t-b4", nombre:"Bono 4 sesiones", sesiones:4, precio:160 },
-  { id:"t-online", nombre:"Online (4 sesiones)", sesiones:4, precio:40 }
+const TARIFAS_2026 = [
+  { id:"t26-val", tipo:"sesion", nombre:"Valoración funcional", precio:60, detalle:"60 min · incluye informe" },
+  { id:"t26-suelta", tipo:"sesion", nombre:"Sesión suelta", precio:55, detalle:"Fuera de programa" },
+  { id:"t26-post-int", tipo:"mes", nombre:"Postoperatorio · Fase intensiva", precio:400, detalle:"2 sesiones por semana" },
+  { id:"t26-post-con", tipo:"mes", nombre:"Postoperatorio · Fase consolidación", precio:200, detalle:"1 sesión por semana" },
+  { id:"t26-dep1", tipo:"mes", nombre:"Vuelta al deporte · 1 por semana", precio:200, detalle:"1 sesión por semana" },
+  { id:"t26-dep2", tipo:"mes", nombre:"Vuelta al deporte · 2 por semana", precio:380, detalle:"2 sesiones por semana" },
+  { id:"t26-dolor", tipo:"mes", nombre:"Dolor persistente", precio:200, detalle:"1 sesión por semana" },
+  { id:"t26-salud", tipo:"mes", nombre:"Salud activa · Individual", precio:200, detalle:"1 sesión por semana" },
+  { id:"t26-salud-p", tipo:"mes", nombre:"Salud activa · En pareja", precio:140, detalle:"1 sesión por semana · por persona" },
+  { id:"t26-rend1", tipo:"mes", nombre:"Rendimiento presencial · 1 por semana", precio:220, detalle:"1 sesión por semana + app" },
+  { id:"t26-rend2", tipo:"mes", nombre:"Rendimiento presencial · 2 por semana", precio:400, detalle:"2 sesiones por semana + app" },
+  { id:"t26-mant", tipo:"mes", nombre:"Plan mantenimiento", precio:120, detalle:"2 sesiones al mes" },
+  { id:"t26-par4", tipo:"mes", nombre:"Sesiones en pareja · 4 al mes", precio:140, detalle:"Por persona" },
+  { id:"t26-par6", tipo:"mes", nombre:"Sesiones en pareja · 6 al mes", precio:200, detalle:"Por persona" },
+  { id:"t26-on-bas", tipo:"mes", nombre:"Online Básico", precio:60, detalle:"Hasta 2 días por semana" },
+  { id:"t26-on-pro", tipo:"mes", nombre:"Online Pro", precio:99, detalle:"Hasta 3 días por semana" },
+  { id:"t26-on-eli", tipo:"mes", nombre:"Online Élite híbrido", precio:149, detalle:"Hasta 5 días por semana" }
 ];
-let S = { clientes:{}, sesiones:{}, tarifas: TARIFAS_INICIALES.slice() };
+const TIPOS = { sesion:"Por sesión", mes:"Mensual", bono:"Bono" };
+const tipoDe = t => t.tipo || (t.sesiones > 1 ? "bono" : "sesion");
+let S = { clientes:{}, sesiones:{}, tarifas: TARIFAS_2026.slice() };
 let me = { id:null, name:"" }, copiaCompartida = null;
 const ui = { tab:"hoy", week: mondayOf(new Date()), day: todayStr(), month: todayStr().slice(0,7), q:"" };
 if (parse(ui.day).getDay() === 0) { ui.week = addDays(ui.week,7); ui.day = ymd(ui.week); }
@@ -362,7 +380,7 @@ async function cargarTodo(){
     toastLargo("No se han podido cargar los datos." + pista + " Detalle: " + m); return;
   }
   TABLAS.forEach((t,i) => { const o = {}; res[i].data.forEach(r => { o[r.id] = r.data; }); S[t] = o; });
-  const tar = res[2].data.find(r => r.id === "tarifas"); S.tarifas = tar && Array.isArray(tar.data.lista) ? tar.data.lista : TARIFAS_INICIALES.slice();
+  const tar = res[2].data.find(r => r.id === "tarifas"); S.tarifas = tar && Array.isArray(tar.data.lista) ? tar.data.lista : TARIFAS_2026.slice();
   const copia = res[2].data.find(r => r.id === "copia"); copiaCompartida = copia ? copia.data : null;
   setSync("Sincronizado", true); render();
 }
@@ -467,13 +485,26 @@ function numEnMes(s){ const l = ses().filter(x => x.clienteId === s.clienteId &&
 function maxSeguidas(f){ const l = delDia(f).filter(activa).map(s => toMin(s.hora)); let best = l.length?1:0, run = 1; for (let i=1;i<l.length;i++){ if (l[i]-l[i-1] <= DURACION){ run++; best = Math.max(best,run); } else run = 1; } return best; }
 const eur = n => (Number(n)||0).toLocaleString("es-ES", { minimumFractionDigits: Number(n) % 1 ? 2 : 0, maximumFractionDigits: 2 }) + " €";
 const tarifaDe = cid => { const c = S.clientes[cid]; return c && c.tarifaId ? S.tarifas.find(t => t.id === c.tarifaId) : null; };
-function lineaTarifa(cid){ const t = tarifaDe(cid); if (!t) return ""; return t.sesiones > 1 ? `Tarifa: ${t.nombre} · ${eur(t.precio)}` : `Precio: ${eur(t.precio)} (${t.nombre})`; }
+function lineaTarifa(cid){
+  const t = tarifaDe(cid); if (!t) return "";
+  const tp = tipoDe(t);
+  if (tp === "mes") return `Tarifa: ${t.nombre} · ${eur(t.precio)}/mes (pago el día 1 de cada mes)`;
+  if (tp === "bono") return `Tarifa: ${t.nombre} · ${eur(t.precio)}`;
+  return `Precio: ${eur(t.precio)} (${t.nombre})`;
+}
+const esMensual = cid => { const t = tarifaDe(cid); return !!t && tipoDe(t) === "mes"; };
 async function guardarTarifas(){ render(); const { error } = await sb.from("ajustes").upsert({ id:"tarifas", data:{ lista:S.tarifas } }); if (error) toast("No se han podido guardar las tarifas."); }
 let cacheNum = {};
 function anteriorActiva(clienteId, fecha, hora, excluir){ const k = fecha+hora; return ses().filter(x => x.clienteId === clienteId && x.id !== excluir && activa(x) && (x.fecha+x.hora) < k).sort(byTime).pop(); }
+function numMes(clienteId, fecha, hora, excluir, nueva){
+  const lista = ses().filter(x => x.clienteId === clienteId && x.id !== excluir && activa(x) && mkey(x.fecha) === mkey(fecha));
+  const antes = lista.filter(x => (x.fecha+x.hora) < fecha+hora).length;
+  return { num: antes + 1, total: lista.length + 1, mes:true };
+}
 function sugerirNum(clienteId, fecha, hora, excluir){
+  if (esMensual(clienteId)) return numMes(clienteId, fecha, hora, excluir);
   const prev = anteriorActiva(clienteId, fecha, hora, excluir);
-  const t = tarifaDe(clienteId), tt = t && t.sesiones > 1 ? t.sesiones : null;
+  const t = tarifaDe(clienteId), tt = t && tipoDe(t) === "bono" && t.sesiones > 1 ? t.sesiones : null;
   if (!prev) return { num:1, total:tt };
   const e = numEf(prev);
   if (e.total && e.num >= e.total) return { num:1, total: tt || e.total };
@@ -482,6 +513,7 @@ function sugerirNum(clienteId, fecha, hora, excluir){
 function numEf(s){
   if (s.num) return { num:s.num, total:s.total || null };
   if (cacheNum[s.id]) return cacheNum[s.id];
+  if (esMensual(s.clienteId)) { const e = numMes(s.clienteId, s.fecha, s.hora, s.id); return (cacheNum[s.id] = activa(s) ? e : { num:e.num, total:e.total-1, mes:true }); }
   return (cacheNum[s.id] = sugerirNum(s.clienteId, s.fecha, s.hora, s.id));
 }
 const etiquetaNum = s => { const e = numEf(s); return e.total ? `${e.num}/${e.total}` : `nº ${e.num}`; };
@@ -490,8 +522,8 @@ function siguienteLaborable(){ let d = addDays(new Date(),1); if (d.getDay() ===
 /* ---------- Mensajes ---------- */
 function msgReserva(s){
   const c = cli(s.clienteId), e = numEf(s);
-  const linea = e.total ? `Es tu sesión ${e.num} de ${e.total}.` : `Es tu sesión nº ${e.num}.`;
-  return `Hola ${c.nombre.split(" ")[0]}! 👋 Te confirmo tu sesión:\n\n📅 ${cap(fechaLarga(s.fecha))} a las ${s.hora}\n📍 ${LUGAR}${lineaTarifa(s.clienteId) ? "\n💶 " + lineaTarifa(s.clienteId) : ""}\n\n${linea}\n\nSi no puedes venir, avísame con al menos 24 h de antelación. Si no avisas o no vienes, se aplicará un recargo.\n\n${FIRMA}`;
+  const linea = e.total ? `Es tu sesión ${e.num} de ${e.total}${e.mes ? " de " + MESES[parse(s.fecha).getMonth()] : ""}.` : `Es tu sesión nº ${e.num}.`;
+  return `Hola ${c.nombre.split(" ")[0]}! 👋 Te confirmo tu sesión:\n\n📅 ${cap(fechaLarga(s.fecha))} a las ${s.hora}\n📍 ${LUGAR}${lineaTarifa(s.clienteId) ? "\n💶 " + lineaTarifa(s.clienteId) : ""}\n\n${linea}\n\nSi no puedes venir, avísame con al menos 24 h de antelación. ${CANCELACION}\n\n${FIRMA}`;
 }
 function msgRecordatorio(s){
   const c = cli(s.clienteId), d = parse(s.fecha), manana = s.fecha === ymd(addDays(new Date(),1));
@@ -504,33 +536,54 @@ function msgSemana(cid, lunes){
   const l = ses().filter(s => s.clienteId === cid && s.fecha >= ini && s.fecha <= fin && activa(s)).sort(byTime);
   if (!l.length) return "";
   const lineas = l.map(s => { const d = parse(s.fecha); return `• ${cap(DIAS[d.getDay()])} ${d.getDate()} · ${s.hora} (sesión ${etiquetaNum(s)})`; }).join("\n");
-  return `Hola ${c.nombre.split(" ")[0]}! 👋 Estas son tus sesiones de la semana:\n\n${lineas}\n\n📍 ${LUGAR}${lineaTarifa(cid) ? "\n💶 " + lineaTarifa(cid) : ""}\n\nSi no puedes venir a alguna, avísame con al menos 24 h de antelación. Si no avisas o no vienes, se aplicará un recargo.\n\n${FIRMA}`;
+  return `Hola ${c.nombre.split(" ")[0]}! 👋 Estas son tus sesiones de la semana:\n\n${lineas}\n\n📍 ${LUGAR}${lineaTarifa(cid) ? "\n💶 " + lineaTarifa(cid) : ""}\n\nSi no puedes venir a alguna, avísame con al menos 24 h de antelación. ${CANCELACION}\n\n${FIRMA}`;
 }
+function planoDe(m){ return `Hola ${m.nombre}:\n\n${m.intro}\n\n${m.lineas.map(([k,v]) => `· ${k}: ${v}`).join("\n")}\n\n${m.nota}\n\nUn saludo,\n`; }
 function emailReserva(s){
   const c = cli(s.clienteId), e = numEf(s), d = parse(s.fecha), tar = lineaTarifa(s.clienteId);
-  return { subject:`Reserva confirmada · ${cap(DIAS[d.getDay()])} ${d.getDate()} de ${MESES[d.getMonth()]}, ${s.hora}`,
-    body:`Hola ${c.nombre.split(" ")[0]}:\n\nTe confirmo tu próxima sesión de readaptación:\n\n· Día: ${cap(fechaLarga(s.fecha))}\n· Hora: ${s.hora}\n· Lugar: ${LUGAR}\n· Sesión: ${e.total ? `${e.num} de ${e.total}` : `nº ${e.num}`}${tar ? `\n· ${tar}` : ""}\n\nSi no puedes venir, avísame con al menos 24 horas de antelación respondiendo a este correo. Si no avisas o no vienes, se aplicará un recargo.\n\nUn saludo,\n` };
+  const lineas = [["Día", cap(fechaLarga(s.fecha))], ["Hora", s.hora], ["Lugar", LUGAR], ["Sesión", e.total ? `${e.num} de ${e.total}${e.mes ? " de " + MESES[d.getMonth()] : ""}` : `nº ${e.num}`]];
+  if (tar) lineas.push(tar.startsWith("Precio") ? ["Precio", tar.replace(/^Precio: /, "")] : ["Tarifa", tar.replace(/^Tarifa: /, "")]);
+  return { tipo:"reserva", etiqueta:"Reserva confirmada", titulo:"Tu próxima sesión", nombre:c.nombre.split(" ")[0],
+    asunto:`Reserva confirmada · ${cap(DIAS[d.getDay()])} ${d.getDate()} de ${MESES[d.getMonth()]}, ${s.hora}`,
+    intro:"te confirmo tu próxima sesión de readaptación:", lineas,
+    nota:`Si no puedes venir, avísame con al menos 24 horas de antelación respondiendo a este correo. ${CANCELACION}` };
 }
 function emailRecordatorio(s){
   const c = cli(s.clienteId), d = parse(s.fecha), manana = s.fecha === ymd(addDays(new Date(),1));
   const cuando = manana ? `mañana, ${DIAS[d.getDay()]} ${d.getDate()},` : `del ${DIAS[d.getDay()]} ${d.getDate()}`;
   const limite = manana ? `hoy antes de las ${s.hora}` : `antes del ${DIAS[addDays(d,-1).getDay()]} a las ${s.hora}`;
-  return { subject:`Recordatorio: tu sesión ${manana ? "de mañana" : "del " + DIAS[d.getDay()]} a las ${s.hora}`,
-    body:`Hola ${c.nombre.split(" ")[0]}:\n\nTe recuerdo tu sesión ${cuando} a las ${s.hora} en ${LUGAR}.\n\nSi necesitas cancelar, avísame ${limite} respondiendo a este correo para evitar el recargo.\n\n¡Nos vemos!\n` };
+  return { tipo:"recordatorio", etiqueta:"Recordatorio", titulo: manana ? "Nos vemos mañana" : `Nos vemos el ${DIAS[d.getDay()]}`, nombre:c.nombre.split(" ")[0],
+    asunto:`Recordatorio: tu sesión ${manana ? "de mañana" : "del " + DIAS[d.getDay()]} a las ${s.hora}`,
+    intro:`te recuerdo tu sesión ${cuando} a las ${s.hora}.`, lineas:[["Día", cap(fechaLarga(s.fecha))], ["Hora", s.hora], ["Lugar", LUGAR]],
+    nota:`Si necesitas cancelar, avísame ${limite} respondiendo a este correo. ${CANCELACION}` };
 }
 function emailSemana(cid, lunes){
   const c = cli(cid), ini = ymd(lunes), fin = ymd(addDays(lunes,6)), tar = lineaTarifa(cid);
   const l = ses().filter(s => s.clienteId === cid && s.fecha >= ini && s.fecha <= fin && activa(s)).sort(byTime);
   if (!l.length) return null;
-  const lineas = l.map(s => { const d = parse(s.fecha); return `· ${cap(DIAS[d.getDay()])} ${d.getDate()} de ${MESES[d.getMonth()]}, ${s.hora} (sesión ${etiquetaNum(s)})`; }).join("\n");
-  return { subject:`Tus sesiones de la semana del ${lunes.getDate()} de ${MESES[lunes.getMonth()]}`,
-    body:`Hola ${c.nombre.split(" ")[0]}:\n\nEstas son tus sesiones de la semana en ${LUGAR}:\n\n${lineas}${tar ? `\n\n${tar}` : ""}\n\nSi no puedes venir a alguna, avísame con al menos 24 horas de antelación respondiendo a este correo. Si no avisas o no vienes, se aplicará un recargo.\n\nUn saludo,\n` };
+  const lineas = l.map(s => { const d = parse(s.fecha); return [`${cap(DABR[d.getDay()])} ${d.getDate()}`, `${s.hora} · sesión ${etiquetaNum(s)}`]; });
+  lineas.push(["Lugar", LUGAR]);
+  if (tar) lineas.push(tar.startsWith("Precio") ? ["Precio", tar.replace(/^Precio: /, "")] : ["Tarifa", tar.replace(/^Tarifa: /, "")]);
+  return { tipo:"semana", etiqueta:"Tu semana", titulo:`Semana del ${lunes.getDate()} de ${MESES[lunes.getMonth()]}`, nombre:c.nombre.split(" ")[0],
+    asunto:`Tus sesiones de la semana del ${lunes.getDate()} de ${MESES[lunes.getMonth()]}`,
+    intro:"estas son tus sesiones de la semana:", lineas,
+    nota:`Si no puedes venir a alguna, avísame con al menos 24 horas de antelación respondiendo a este correo. ${CANCELACION}` };
 }
-function enviarEmail(cid, m, done){
+async function enviarEmail(cid, m, done){
   const c = cli(cid);
-  if (!c.email) return toast("Este cliente no tiene email. Añádelo en Clientes.");
-  const url = `mailto:${encodeURIComponent(c.email)}?subject=${encodeURIComponent(m.subject)}&body=${encodeURIComponent(m.body)}`;
-  window.location.href = url; if (done) done();
+  if (!c.email) { toast("Este cliente no tiene email. Añádelo en Clientes."); return false; }
+  if (!EMAIL_API) {
+    window.location.href = `mailto:${encodeURIComponent(c.email)}?subject=${encodeURIComponent(m.asunto)}&body=${encodeURIComponent(planoDe(m))}`;
+    if (done) done(); return true;
+  }
+  toast("Enviando email…");
+  try {
+    const { data:{ session } } = await sb.auth.getSession();
+    const r = await fetch(EMAIL_API, { method:"POST", body: JSON.stringify({ ...m, to:c.email, token: session && session.access_token }) });
+    const j = await r.json();
+    if (!j.ok) throw new Error(j.error || "error");
+    toast(`Email enviado a ${c.nombre.split(" ")[0]}`); if (done) done(); return true;
+  } catch(e) { toastLargo("No se ha podido enviar el email. Prueba de nuevo o envíalo por WhatsApp."); return false; }
 }
 const waLink = (tel, t) => { const p = phoneIntl(tel); return `https://wa.me/${p}?text=${encodeURIComponent(t)}`; };
 async function copiar(t){
@@ -544,7 +597,7 @@ const TABS = [["hoy","Hoy"],["semana","Semana"],["clientes","Clientes"],["mes","
 function pendientes(){
   const hoy = todayStr(), sig = siguienteLaborable();
   const reservas = ses().filter(s => s.estado === "programada" && s.fecha >= hoy && !s.reservaEnviada).length;
-  const recs = ses().filter(s => s.fecha === sig && activa(s) && !s.recordatorioEnviado).length;
+  const recs = ses().filter(s => s.fecha === sig && activa(s) && !s.recordatorioEnviado && !(EMAIL_API && cli(s.clienteId).email)).length;
   return { reservas, recs, total: reservas + recs };
 }
 function avisosHtml(){
@@ -594,7 +647,7 @@ function vHoy(){
   const deben = {}; ses().filter(s => cobrable(s) && !s.pagado).forEach(s => (deben[s.clienteId] ||= []).push(s));
   const lunes = mondayOf(new Date()), ini = ymd(lunes), fin = ymd(addDays(lunes,6));
   const semAct = ses().filter(s => s.fecha >= ini && s.fecha <= fin && activa(s)).length;
-  const recPend = recs.filter(s => !s.recordatorioEnviado).length;
+  const recPend = recs.filter(s => !s.recordatorioEnviado && !(EMAIL_API && cli(s.clienteId).email)).length;
   const pendPago = Object.values(deben).reduce((a,l) => a+l.length, 0);
 
   let h = `<div class="phead"><div><h1>${saludo()}${me.name ? ", "+esc(me.name.split(" ")[0]) : ""}</h1><p>${cap(fechaLarga(hoy))}</p></div><div class="pactions"><button class="btn primary" data-new="${hoy}|">${ic("plus")}Nueva sesión</button></div></div>`;
@@ -615,7 +668,7 @@ function vHoy(){
   h += `<div class="grid2">`;
   h += panel("Agenda de hoy", deHoy.length, deHoy.length ? deHoy.map(s => itemSes(s, `<button class="btn small" data-open="${s.id}">Abrir</button>`)).join("") : vacio("No tienes sesiones hoy."));
   h += panel(`Recordatorios · ${DIAS[parse(sig).getDay()]} ${parse(sig).getDate()}`, recPend, recs.length ? recs.map(s => itemSes(s,
-      s.recordatorioEnviado ? `<span class="pill paid">Enviado</span><button class="btn small ghost" data-copy="rec" data-id="${s.id}">${ic("copy")}</button>` : `<button class="btn small wa" data-wa="rec" data-id="${s.id}">${ic("wa")}WhatsApp</button>${cli(s.clienteId).email ? `<button class="btn small icon" data-mail="rec" data-id="${s.id}" aria-label="Enviar por email">${ic("mail")}</button>` : ""}<button class="btn small icon" data-copy="rec" data-id="${s.id}" aria-label="Copiar">${ic("copy")}</button>`)).join("") : vacio("No hay sesiones ese día."), "Envíalos hoy", true, "p-recs");
+      !s.recordatorioEnviado && EMAIL_API && cli(s.clienteId).email ? `<span class="pill prog">Automático por email</span>` : s.recordatorioEnviado ? `<span class="pill paid">Enviado</span><button class="btn small ghost" data-copy="rec" data-id="${s.id}">${ic("copy")}</button>` : `<button class="btn small wa" data-wa="rec" data-id="${s.id}">${ic("wa")}WhatsApp</button>${cli(s.clienteId).email ? `<button class="btn small icon" data-mail="rec" data-id="${s.id}" aria-label="Enviar por email">${ic("mail")}</button>` : ""}<button class="btn small icon" data-copy="rec" data-id="${s.id}" aria-label="Copiar">${ic("copy")}</button>`)).join("") : vacio("No hay sesiones ese día."), "Envíalos hoy", true, "p-recs");
   h += `</div><div style="height:16px"></div><div class="grid2">`;
   h += panel("Reservas sin enviar", sinReserva.length, sinReserva.length ? sinReserva.map(s => itemSes(s,
       `<button class="btn small wa" data-wa="res" data-id="${s.id}">${ic("wa")}WhatsApp</button>${cli(s.clienteId).email ? `<button class="btn small icon" data-mail="res" data-id="${s.id}" aria-label="Enviar por email">${ic("mail")}</button>` : ""}<button class="btn small icon" data-copy="res" data-id="${s.id}" aria-label="Copiar">${ic("copy")}</button><button class="btn small ghost" data-flag="reservaEnviada" data-id="${s.id}">Ya enviada</button>`,
@@ -696,22 +749,36 @@ function vClientes(){
   return h + panelTarifas();
 }
 function panelTarifas(){
-  const body = S.tarifas.length ? S.tarifas.map(t => { const n = Object.values(S.clientes).filter(c => c.tarifaId === t.id).length;
-    return `<div class="item"><div class="who"><b>${esc(t.nombre)}</b><span>${t.sesiones > 1 ? `${t.sesiones} sesiones · ${eur(t.precio/t.sesiones)} por sesión` : "Precio por sesión"} · ${n} ${n===1?"cliente":"clientes"}</span></div><div style="font-weight:800;font-size:16px">${eur(t.precio)}</div><div class="acts"><button class="btn small" data-tarifa="${t.id}">Editar</button></div></div>`; }).join("") : vacio("Aún no tienes tarifas.");
-  return `<section class="panel"><div class="ph"><h2>Tarifas <span class="count">${S.tarifas.length}</span></h2><button class="btn small" data-tarifa="">${ic("plus")}Nueva tarifa</button></div><div class="pb">${body}</div></section>`;
+  const tiene2026 = S.tarifas.some(t => String(t.id).startsWith("t26-"));
+  const grupos = ["sesion","mes","bono"].map(tp => [tp, S.tarifas.filter(t => tipoDe(t) === tp)]).filter(([,l]) => l.length);
+  const body = grupos.length ? grupos.map(([tp, l]) => `<div class="eyebrow" style="padding:12px 18px 4px">${TIPOS[tp]}</div>` + l.map(t => { const n = Object.values(S.clientes).filter(c => c.tarifaId === t.id).length;
+    return `<div class="item"><div class="who"><b>${esc(t.nombre)}</b><span>${esc(t.detalle || (tipoDe(t) === "bono" ? `${t.sesiones} sesiones` : ""))}${t.detalle || tipoDe(t) === "bono" ? " · " : ""}${n} ${n===1?"cliente":"clientes"}</span></div><div style="font-weight:800;font-size:16px;white-space:nowrap">${eur(t.precio)}${tipoDe(t) === "mes" ? '<span style="font-weight:500;font-size:12px;color:var(--muted)">/mes</span>' : ""}</div><div class="acts"><button class="btn small" data-tarifa="${t.id}">Editar</button></div></div>`; }).join("")).join("") : vacio("Aún no tienes tarifas.");
+  return `<section class="panel"><div class="ph"><h2>Tarifas <span class="count">${S.tarifas.length}</span></h2><div class="acts">${tiene2026 ? "" : `<button class="btn small primary" data-cargar2026="1">Cargar tarifas 2026</button>`}<button class="btn small" data-tarifa="">${ic("plus")}Nueva tarifa</button></div></div><div class="pb">${body}</div></section>`;
+}
+function cargarTarifas2026(){
+  const usadas = S.tarifas.filter(t => !String(t.id).startsWith("t26-") && Object.values(S.clientes).some(c => c.tarifaId === t.id))
+    .map(t => ({ ...t, tipo: tipoDe(t), nombre: t.nombre.includes("(antigua)") ? t.nombre : t.nombre + " (antigua)" }));
+  if (!confirm(`Se cargarán las ${TARIFAS_2026.length} tarifas de 2026.${usadas.length ? ` Las ${usadas.length} tarifas antiguas que usan tus clientes se mantienen marcadas como "(antigua)" para que se las cambies.` : ""} ¿Continuar?`)) return;
+  S.tarifas = [...TARIFAS_2026, ...usadas]; guardarTarifas(); toast("Tarifas 2026 cargadas");
 }
 function modalTarifa(id){
-  const t = id ? S.tarifas.find(x => x.id === id) : { nombre:"", sesiones:1, precio:"" };
+  const t = id ? S.tarifas.find(x => x.id === id) : { nombre:"", tipo:"mes", sesiones:1, precio:"", detalle:"" };
+  const tp0 = id ? tipoDe(t) : "mes";
   openModal(id ? "Editar tarifa" : "Nueva tarifa", "Se muestra en las reservas de los clientes que la tengan",
-    `<div class="f"><label for="tn">Nombre</label><input id="tn" value="${esc(t.nombre)}" placeholder="Ej.: Bono 8 sesiones"></div>
-     <div class="two"><div class="f"><label for="ts">Sesiones incluidas</label><input id="ts" type="number" min="1" inputmode="numeric" value="${t.sesiones}"><div class="hint">1 = precio por sesión. Más de 1 = bono.</div></div>
-     <div class="f"><label for="tp">Precio (€)</label><input id="tp" type="number" min="0" step="0.01" inputmode="decimal" value="${t.precio}"><div class="hint">Del bono completo si es un bono.</div></div></div>`,
+    `<div class="f"><label for="tn">Nombre</label><input id="tn" value="${esc(t.nombre)}" placeholder="Ej.: Postoperatorio · Fase intensiva"></div>
+     <div class="two"><div class="f"><label for="tt">Tipo</label><select id="tt">${Object.entries(TIPOS).map(([k,v]) => `<option value="${k}" ${k===tp0?"selected":""}>${v}</option>`).join("")}</select></div>
+     <div class="f"><label for="tp">Precio (€)</label><input id="tp" type="number" min="0" step="0.01" inputmode="decimal" value="${t.precio}"><div class="hint" id="tph"></div></div></div>
+     <div class="f" id="tsbox"><label for="ts">Sesiones del bono</label><input id="ts" type="number" min="2" inputmode="numeric" value="${t.sesiones > 1 ? t.sesiones : 4}"></div>
+     <div class="f"><label for="td">Detalle (opcional)</label><input id="td" value="${esc(t.detalle || "")}" placeholder="Ej.: 2 sesiones por semana"></div>`,
     `${id ? `<button class="btn danger" id="tdel">Eliminar</button>` : "<span></span>"}<div class="acts"><button class="btn" data-close="1">Cancelar</button><button class="btn primary" id="tsave">Guardar</button></div>`);
   const $ = q => document.getElementById(q);
+  const upd = () => { const v = $("tt").value; $("tsbox").hidden = v !== "bono"; $("tph").textContent = v === "mes" ? "Precio al mes." : v === "bono" ? "Precio del bono completo." : "Precio de una sesión."; };
+  $("tt").onchange = upd; upd();
   $("tsave").onclick = () => {
-    const nombre = $("tn").value.trim(), sesiones = parseInt($("ts").value, 10), precio = parseFloat(String($("tp").value).replace(",", "."));
-    if (!nombre) return toast("Pon un nombre"); if (!sesiones || sesiones < 1) return toast("Revisa las sesiones incluidas"); if (isNaN(precio) || precio < 0) return toast("Revisa el precio");
-    const nueva = { id: id || "t-" + uid(), nombre, sesiones, precio };
+    const nombre = $("tn").value.trim(), tipo = $("tt").value, precio = parseFloat(String($("tp").value).replace(",", "."));
+    const sesiones = tipo === "bono" ? parseInt($("ts").value, 10) : 1;
+    if (!nombre) return toast("Pon un nombre"); if (isNaN(precio) || precio < 0) return toast("Revisa el precio"); if (tipo === "bono" && (!sesiones || sesiones < 2)) return toast("Un bono tiene al menos 2 sesiones");
+    const nueva = { id: id || "t-" + uid(), tipo, nombre, precio, sesiones, detalle:$("td").value.trim() };
     S.tarifas = id ? S.tarifas.map(x => x.id === id ? nueva : x) : [...S.tarifas, nueva];
     closeModal(); guardarTarifas();
   };
@@ -769,8 +836,8 @@ function modalSesion(id, preFecha, preHora){
     <div id="newcli" hidden><div class="two"><div class="f"><label for="nn">Nombre</label><input id="nn" autocomplete="off"></div><div class="f"><label for="nt">Móvil</label><input id="nt" inputmode="tel" autocomplete="off" placeholder="600 123 456"></div></div></div>
     <div class="two"><div class="f"><label for="mf">Fecha</label><input id="mf" type="date" value="${s.fecha}"></div><div class="f"><label for="mh">Hora</label><select id="mh">${timeOptions(s.fecha).map(t => `<option ${t===s.hora?"selected":""}>${t}</option>`).join("")}</select></div></div>`;
   const nIni = id ? numEf(s) : (s.clienteId ? sugerirNum(s.clienteId, s.fecha, s.hora) : { num:1, total:null });
-  b += `<div class="numrow"><div class="f"><label for="mnum">Sesión nº</label><input id="mnum" type="number" min="1" inputmode="numeric" value="${nIni.num}"></div><span class="de">de</span><div class="f"><label for="mtot">Total del bono</label><input id="mtot" type="number" min="1" inputmode="numeric" value="${nIni.total || ""}" placeholder="Suelta"></div></div>
-    <p style="font-size:12px;color:var(--muted);margin:-8px 0 14px">Se calcula sola a partir de la sesión anterior del cliente. Cámbialo si empieza un bono nuevo.</p>`;
+  b += `<div class="numrow"><div class="f"><label for="mnum">Sesión nº</label><input id="mnum" type="number" min="1" inputmode="numeric" value="${nIni.num}"></div><span class="de">de</span><div class="f"><label for="mtot">Total</label><input id="mtot" type="number" min="1" inputmode="numeric" value="${nIni.total || ""}" placeholder="Suelta"></div></div>
+    <p style="font-size:12px;color:var(--muted);margin:-8px 0 14px">Se calcula sola: con tarifa mensual, cuenta las sesiones del mes; con bono, sigue la sesión anterior. Cámbialo solo si hace falta.</p>`;
   if (id) b += `<div class="f"><span class="flabel">Cómo fue</span><div class="seg" id="mseg">${Object.entries(ESTADOS).map(([k,v]) => `<button type="button" data-v="${k}" aria-pressed="${k===s.estado}">${v.t}</button>`).join("")}</div><div class="hint">Canceló a tiempo: sin recargo. No vino y Canceló tarde: con recargo.</div></div>`;
   b += `<label class="check"><input type="checkbox" id="mp" ${s.pagado?"checked":""}> Pagado</label>
     <div class="f"><label for="mn">Nota (opcional)</label><input id="mn" value="${esc(s.nota)}" placeholder="Ej.: paga en efectivo el viernes"><div class="hint">No apuntes aquí datos de salud.</div></div>`;
@@ -787,9 +854,9 @@ function modalSesion(id, preFecha, preHora){
   if (id && s.modEn) b += `<p class="lastmod">Último cambio: ${s.modPor ? esc(s.modPor)+" · " : ""}${new Date(s.modEn).toLocaleString("es-ES",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}</p>`;
   openModal(id ? cli(s.clienteId).nombre : "Nueva sesión", id ? `${cap(fechaLarga(s.fecha))} · ${s.hora}` : "", b, foot);
   const $ = q => document.getElementById(q);
-  let numTocado = !!id;
+  let numTocado = false;
   $("mnum").oninput = $("mtot").oninput = () => { numTocado = true; };
-  const resugerir = () => { if (numTocado) return; const c = $("mc").value; const g = (c && c !== "__new") ? sugerirNum(c, $("mf").value, $("mh").value, id) : { num:1, total:null }; $("mnum").value = g.num; $("mtot").value = g.total || ""; };
+  const resugerir = () => { if (numTocado || id) return; const c = $("mc").value; const g = (c && c !== "__new") ? sugerirNum(c, $("mf").value, $("mh").value, id) : { num:1, total:null }; $("mnum").value = g.num; $("mtot").value = g.total || ""; };
   $("mc").onchange = () => { $("newcli").hidden = $("mc").value !== "__new"; if (!$("newcli").hidden) $("nn").focus(); resugerir(); };
   $("mh").addEventListener("change", resugerir);
   $("mf").onchange = () => { setTimeout(resugerir); const cur = $("mh").value; $("mh").innerHTML = timeOptions($("mf").value).map(t => `<option ${t===cur?"selected":""}>${t}</option>`).join(""); };
@@ -813,9 +880,10 @@ function modalSesion(id, preFecha, preHora){
     const hora = $("mh").value;
     const choque = delDia(fecha).find(x => x.id !== id && activa(x) && Math.abs(toMin(x.hora) - toMin(hora)) < DURACION);
     if (choque && !confirm(`Se solapa con la sesión de ${cli(choque.clienteId).nombre} a las ${choque.hora}. ¿Guardar igualmente?`)) return;
-    const num = parseInt($("mnum").value, 10), total = $("mtot").value ? parseInt($("mtot").value, 10) : null;
+    let num = parseInt($("mnum").value, 10), total = $("mtot").value ? parseInt($("mtot").value, 10) : null;
     if (!num || num < 1) return toast("Pon el número de sesión");
-    if (total && num > total) return toast("El número de sesión no puede ser mayor que el total del bono");
+    if (total && num > total) return toast("El número de sesión no puede ser mayor que el total");
+    if (!numTocado) { num = id ? (S.sesiones[id].num || null) : null; total = id ? (S.sesiones[id].total || null) : null; }
     const cambio = id && (S.sesiones[id].fecha !== fecha || S.sesiones[id].hora !== hora);
     const obj = { ...(id ? S.sesiones[id] : { id:uid(), reservaEnviada:false, recordatorioEnviado:false }), clienteId, fecha, hora, num, total, estado: id ? estado.v : "programada", pagado:$("mp").checked, nota:$("mn").value.trim() };
     if (cambio) { obj.reservaEnviada = false; obj.recordatorioEnviado = false; }
@@ -826,11 +894,18 @@ function modalSesion(id, preFecha, preHora){
 
 function modalEnviar(id){
   const s = S.sesiones[id], c = cli(s.clienteId), t = msgReserva(s);
-  openModal("Sesión guardada", `Envía la reserva a ${esc(c.nombre)}`, `<div class="msgbox">${esc(t)}</div>${c.telefono || c.email ? "" : `<div class="alert">Este cliente no tiene móvil ni email guardados. Copia el mensaje o añádelos en Clientes.</div>`}`,
-    `<button class="btn ghost" data-close="1">Ahora no</button><div class="acts"><button class="btn icon" id="ec" aria-label="Copiar">${ic("copy")}</button>${c.email ? `<button class="btn" id="em">${ic("mail")}Email</button>` : ""}<button class="btn wa" id="ew">${ic("wa")}WhatsApp</button></div>`);
-  if (c.email) document.getElementById("em").onclick = () => { enviarEmail(s.clienteId, emailReserva(S.sesiones[id]), () => patch("sesiones", id, {reservaEnviada:true})); closeModal(); };
-  document.getElementById("ec").onclick = () => { copiar(t); patch("sesiones", id, {reservaEnviada:true}); closeModal(); };
-  document.getElementById("ew").onclick = () => { enviar(c.telefono, t, () => patch("sesiones", id, {reservaEnviada:true})); closeModal(); };
+  const auto = EMAIL_API && c.email;
+  openModal("Sesión guardada", auto ? `Enviando la reserva por email a ${esc(c.email)}…` : `Envía la reserva a ${esc(c.nombre)}`,
+    `<div id="estadoEmail"></div><div class="msgbox">${esc(t)}</div>${c.telefono || c.email ? "" : `<div class="alert">Este cliente no tiene móvil ni email guardados. Copia el mensaje o añádelos en Clientes.</div>`}`,
+    `<button class="btn ghost" data-close="1">${auto ? "Cerrar" : "Ahora no"}</button><div class="acts"><button class="btn icon" id="ec" aria-label="Copiar">${ic("copy")}</button>${c.email && !auto ? `<button class="btn" id="em">${ic("mail")}Email</button>` : ""}<button class="btn wa" id="ew">${ic("wa")}WhatsApp</button></div>`);
+  const marcar = () => patch("sesiones", id, {reservaEnviada:true});
+  if (auto) enviarEmail(s.clienteId, emailReserva(S.sesiones[id]), marcar).then(ok => {
+    const el = document.getElementById("estadoEmail"); if (!el) return;
+    el.innerHTML = ok ? `<div class="alert" style="background:var(--green-soft);color:var(--green)">${ic("check")} Reserva enviada por email. Si quieres, mándala también por WhatsApp.</div>` : `<div class="mwarn">No se ha podido enviar el email. Envíala por WhatsApp.</div>`;
+  });
+  if (c.email && !auto) document.getElementById("em").onclick = () => { enviarEmail(s.clienteId, emailReserva(S.sesiones[id]), marcar); closeModal(); };
+  document.getElementById("ec").onclick = () => { copiar(t); marcar(); closeModal(); };
+  document.getElementById("ew").onclick = () => { enviar(c.telefono, t, marcar); closeModal(); };
 }
 
 function modalCliente(id){
@@ -840,7 +915,7 @@ function modalCliente(id){
   let b = `<div class="f"><label for="cn">Nombre</label><input id="cn" value="${esc(c.nombre)}"></div>
     <div class="two"><div class="f"><label for="ct">Móvil</label><input id="ct" inputmode="tel" value="${esc(c.telefono)}" placeholder="600 123 456"><div class="hint">Sin prefijo se entiende +34.</div></div>
     <div class="f"><label for="cem">Email</label><input id="cem" type="email" inputmode="email" autocomplete="off" value="${esc(c.email || "")}" placeholder="nombre@correo.com"></div></div>
-    <div class="two"><div class="f"><label for="cta">Tarifa</label><select id="cta"><option value="">Sin tarifa</option>${S.tarifas.map(t => `<option value="${t.id}" ${t.id===c.tarifaId?"selected":""}>${esc(t.nombre)} · ${eur(t.precio)}</option>`).join("")}</select><div class="hint">Aparece en la reserva. Las tarifas se editan en Clientes.</div></div>
+    <div class="two"><div class="f"><label for="cta">Tarifa</label><select id="cta"><option value="">Sin tarifa</option>${["sesion","mes","bono"].map(tp => { const l = S.tarifas.filter(t => tipoDe(t) === tp); return l.length ? `<optgroup label="${TIPOS[tp]}">${l.map(t => `<option value="${t.id}" ${t.id===c.tarifaId?"selected":""}>${esc(t.nombre)} · ${eur(t.precio)}${tp==="mes"?"/mes":""}</option>`).join("")}</optgroup>` : ""; }).join("")}</select><div class="hint">Aparece en la reserva. Las tarifas se editan en Clientes.</div></div>
     <div class="f"><label for="cno">Nota (opcional)</label><input id="cno" value="${esc(c.nota)}" placeholder="Ej.: prefiere tardes"><div class="hint">Sin datos de salud.</div></div></div>`;
   if (id){
     b += `<div class="f"><span class="flabel">Sesiones de ${MESES[Number(mes.slice(5))-1]}</span><div class="hist">${delMes.length ? delMes.map(s => `<div class="item"><div class="time">${s.hora}<small>${DABR[parse(s.fecha).getDay()]} ${parse(s.fecha).getDate()}</small></div><div class="who"><b style="font-weight:600;font-size:13.5px">Sesión ${etiquetaNum(s)}</b><span>${pills(s)||'<span class="pill prog">Programada</span>'}</span></div></div>`).join("") : `<p style="color:var(--muted);font-size:14px;margin:4px 0">Sin sesiones este mes.</p>`}</div></div>`;
@@ -884,6 +959,7 @@ document.getElementById("main").addEventListener("click", e => {
   if (d.wa) { const s = S.sesiones[d.id], rec = d.wa === "rec"; return enviar(cli(s.clienteId).telefono, rec ? msgRecordatorio(s) : msgReserva(s), () => patch("sesiones", s.id, rec ? {recordatorioEnviado:true} : {reservaEnviada:true})); }
   if (d.mail) { const s = S.sesiones[d.id], rec = d.mail === "rec"; return enviarEmail(s.clienteId, rec ? emailRecordatorio(s) : emailReserva(s), () => patch("sesiones", s.id, rec ? {recordatorioEnviado:true} : {reservaEnviada:true})); }
   if (d.tarifa !== undefined) return modalTarifa(d.tarifa || null);
+  if (d.cargar2026) return cargarTarifas2026();
   if (d.copy) { const s = S.sesiones[d.id], rec = d.copy === "rec"; copiar(rec ? msgRecordatorio(s) : msgReserva(s)); return patch("sesiones", s.id, rec ? {recordatorioEnviado:true} : {reservaEnviada:true}); }
   if (d.pagar) { const l = ses().filter(s => s.clienteId === d.pagar && cobrable(s) && !s.pagado && (!d.mes || mkey(s.fecha) === d.mes)); l.forEach(s => patch("sesiones", s.id, {pagado:true})); return toast(`${l.length} ${l.length===1?"sesión marcada":"sesiones marcadas"} como pagadas`); }
   if (d.week !== undefined) { const n = Number(d.week); ui.week = n === 0 ? mondayOf(new Date()) : addDays(ui.week, 7*n); if (n === 0 && parse(todayStr()).getDay() === 0) ui.week = addDays(ui.week,7); ui.day = n === 0 && parse(todayStr()).getDay() !== 0 ? todayStr() : ymd(ui.week); return render(); }
@@ -906,8 +982,7 @@ function copiarSemana(){
   if (!confirm(`Se copiarán ${prev.length} sesiones de la semana anterior a esta, con el mismo cliente, día y hora. ¿Continuar?`)) return;
   let n = 0;
   prev.sort(byTime).forEach(s => { const fecha = ymd(addDays(parse(s.fecha),7)); if (ses().some(x => x.fecha === fecha && x.hora === s.hora && activa(x))) return;
-    cacheNum = {}; const g = sugerirNum(s.clienteId, fecha, s.hora);
-    put("sesiones", { id:uid(), clienteId:s.clienteId, fecha, hora:s.hora, num:g.num, total:g.total, estado:"programada", pagado:false, nota:"", reservaEnviada:false, recordatorioEnviado:false }); n++; });
+    put("sesiones", { id:uid(), clienteId:s.clienteId, fecha, hora:s.hora, estado:"programada", pagado:false, nota:"", reservaEnviada:false, recordatorioEnviado:false }); n++; });
   toast(`${n} sesiones copiadas. Envía el plan semanal a cada cliente.`);
 }
 

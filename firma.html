@@ -51,17 +51,19 @@
 /* ===== Tus datos: cambia lo que va entre comillas ===== */
 const DATOS = {
   nombre: "Patri S. Rodeiro",
-  titulo: "Readaptadora deportiva · Graduada en CAFYD",
+  titulo: "Readaptadora de lesiones · Colegiada nº 65.238",
   cv: [
-    "Readaptación de lesiones y vuelta a la actividad · Clínica DCF",
-    "[Tu cargo] · Racing Club de Ferrol",
-    "[Formación destacada: máster, certificaciones…]"
+    "Graduada en Ciencias de la Actividad Física y del Deporte",
+    "Máster en Readaptación de Lesiones (FSI)",
+    "Directora del Área de Rendimiento y Readaptación de lesiones · Racing Club Ferrol",
+    "Ex readaptadora y especialista en fuerza · R.C. Deportivo de La Coruña",
+    "Ex directora del Área de Rendimiento y Salud · Selección Nacional Femenina de fútbol de República Dominicana"
   ],
-  telefono: "[Tu teléfono]",
-  email: "[Tu email]",
-  lugar: "Clínica DCF · [Dirección]",
-  colegiada: "[Nº de colegiada COLEF Galicia]",
-  instagram: ""   // ej.: "@patri.readaptacion" (déjalo vacío si no quieres mostrarlo)
+  telefono: "613 711 792",
+  email: "patri.strengthcoach@gmail.com",
+  lugar: "Clínica DCF · Mugardos",
+  colegiada: "",
+  instagram: ""
 };
 /* ===================================================== */
 
@@ -73,7 +75,7 @@ function firmaHTML(preview){
   const t = s => preview ? marca(s) : esc(s);
   const contacto = [
     DATOS.telefono && `📞 ${t(DATOS.telefono)}`,
-    DATOS.email && `✉️ ${t(DATOS.email)}`,
+    DATOS.email && `✉️ <a href="mailto:${esc(DATOS.email)}" style="color:#14213D">${t(DATOS.email)}</a>`,
     DATOS.instagram && `📷 ${t(DATOS.instagram)}`
   ].filter(Boolean).join(" &nbsp;·&nbsp; ");
   return `<table cellpadding="0" cellspacing="0" border="0" style="font-family:Arial,Helvetica,sans-serif;color:#14213D;max-width:520px;border-collapse:collapse">

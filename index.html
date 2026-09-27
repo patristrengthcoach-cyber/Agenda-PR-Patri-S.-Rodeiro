@@ -269,6 +269,7 @@ tr:last-child td{border-bottom:0}
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
 <script src="config.js"></script>
+<script src="plantilla-email.js"></script>
 <script>
 /* ---------- Iconos ---------- */
 const IC = {
@@ -538,6 +539,18 @@ function msgSemana(cid, lunes){
   const lineas = l.map(s => { const d = parse(s.fecha); return `• ${cap(DIAS[d.getDay()])} ${d.getDate()} · ${s.hora} (sesión ${etiquetaNum(s)})`; }).join("\n");
   return `Hola ${c.nombre.split(" ")[0]}! 👋 Estas son tus sesiones de la semana:\n\n${lineas}\n\n📍 ${LUGAR}${lineaTarifa(cid) ? "\n💶 " + lineaTarifa(cid) : ""}\n\nSi no puedes venir a alguna, avísame con al menos 24 h de antelación. ${CANCELACION}\n\n${FIRMA}`;
 }
+function avisoPegar(c, m){
+  const gmail = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(c.email)}&su=${encodeURIComponent(m.asunto)}`;
+  openModal("Correo copiado", `Para ${esc(c.nombre)} · ${esc(c.email)}`,
+    `<ol style="margin:0 0 12px;padding-left:20px;line-height:1.7">
+      <li>Pulsa <b>Abrir Gmail</b>: se abre un correo nuevo con el destinatario y el asunto ya puestos.</li>
+      <li>Haz clic en el cuerpo del correo y pega con <b>Ctrl+V</b> (en Mac, <b>Cmd+V</b>).</li>
+      <li>Si Gmail añade también tu firma, bórrala: el correo ya la lleva con el logo.</li>
+      <li>Pulsa <b>Enviar</b>.</li></ol>
+     <div class="f"><span class="flabel">Asunto</span><div class="msgbox" style="margin:0">${esc(m.asunto)}</div></div>`,
+    `<button class="btn" id="casu">${ic("copy")}Copiar asunto</button><div class="acts"><button class="btn" data-close="1">Cerrar</button><a class="btn primary" href="${gmail}" target="_blank" rel="noopener" style="text-decoration:none">${ic("mail")}Abrir Gmail</a></div>`);
+  document.getElementById("casu").onclick = () => copiar(m.asunto);
+}
 function planoDe(m){ return `Hola ${m.nombre}:\n\n${m.intro}\n\n${m.lineas.map(([k,v]) => `· ${k}: ${v}`).join("\n")}\n\n${m.nota}\n\nUn saludo,\n`; }
 function emailReserva(s){
   const c = cli(s.clienteId), e = numEf(s), d = parse(s.fecha), tar = lineaTarifa(s.clienteId);
@@ -573,6 +586,12 @@ async function enviarEmail(cid, m, done){
   const c = cli(cid);
   if (!c.email) { toast("Este cliente no tiene email. Añádelo en Clientes."); return false; }
   if (!EMAIL_API) {
+    if (window.PlantillaEmail) {
+      try { await PlantillaEmail.copiar(m); }
+      catch(e) { toast("No se ha podido copiar el correo."); return false; }
+      avisoPegar(c, m);
+      if (done) done(); return true;
+    }
     window.location.href = `mailto:${encodeURIComponent(c.email)}?subject=${encodeURIComponent(m.asunto)}&body=${encodeURIComponent(planoDe(m))}`;
     if (done) done(); return true;
   }

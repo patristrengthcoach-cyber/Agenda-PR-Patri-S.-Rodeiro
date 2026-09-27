@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Plantillas de correo · Patri S. Rodeiro</title>
+<link rel="icon" href="favicon.png" type="image/png">
+<style>
+  :root{--navy:#14213D;--yellow:#F5B700;--grey:#687288;--line:#E0E3EA;--bg:#F3F4F7;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+  *,*::before,*::after{box-sizing:inherit}
+  body{margin:0;background:var(--bg);color:var(--navy);font:15px/1.5 Arial,Helvetica,sans-serif}
+  .wrap{max-width:1100px;margin:0 auto;padding:26px 18px 60px}
+  h1{font-size:24px;margin:0 0 4px}
+  .sub{color:var(--grey);margin:0 0 20px}
+  .grid{display:grid;gap:18px}
+  @media (min-width:960px){.grid{grid-template-columns:360px 1fr;align-items:start}}
+  .card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px}
+  .card h2{font-size:12.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--grey);margin:0 0 14px}
+  label{display:block;font-size:12.5px;font-weight:700;margin:0 0 5px}
+  input,select,textarea{width:100%;font:inherit;border:1px solid var(--line);border-radius:9px;padding:9px 11px;margin-bottom:13px;background:#fff;color:var(--navy)}
+  textarea{min-height:92px;resize:vertical}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .hint{font-size:12px;color:var(--grey);margin:-8px 0 13px}
+  .btns{display:flex;gap:8px;flex-wrap:wrap}
+  button{font:inherit;font-weight:700;border-radius:9px;padding:10px 16px;cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--navy)}
+  button.main{background:var(--yellow);border-color:var(--yellow)}
+  button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--navy);outline-offset:2px}
+  .asunto{background:#F7F8FA;border:1px solid var(--line);border-radius:9px;padding:10px 12px;font-weight:700;margin-bottom:12px}
+  .preview{background:var(--bg);border-radius:12px;padding:16px 10px;overflow-x:auto}
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 18px;border-radius:10px;font-weight:700}
+  [hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Plantillas de correo</h1>
+  <p class="sub">Rellena los datos, pulsa <b>Copiar correo</b> y pégalo en el cuerpo de un correo nuevo de Gmail con Ctrl+V. Sale con tu logo y tu firma.</p>
+
+  <div class="grid">
+    <div class="card">
+      <h2>Datos</h2>
+      <label for="tipo">Tipo de correo</label>
+      <select id="tipo">
+        <option value="reserva">Reserva confirmada</option>
+        <option value="recordatorio">Recordatorio</option>
+        <option value="semana">Plan de la semana</option>
+      </select>
+      <label for="nombre">Nombre del cliente</label>
+      <input id="nombre" value="Laura" autocomplete="off">
+
+      <div id="bloqueSesion">
+        <div class="two">
+          <div><label for="fecha">Día</label><input id="fecha" type="date"></div>
+          <div><label for="hora">Hora</label><input id="hora" type="time" value="10:00" step="900"></div>
+        </div>
+        <div id="bloqueNum">
+          <label for="sesion">Sesión</label>
+          <input id="sesion" value="3 de 8 de octubre">
+          <p class="hint">Ej.: "3 de 8 de octubre" o "nº 1". Déjalo vacío para no mostrarlo.</p>
+        </div>
+      </div>
+
+      <div id="bloqueSemana" hidden>
+        <label for="lista">Sesiones de la semana (una por línea)</label>
+        <textarea id="lista">Lun 5 · 10:00 · sesión 3/8
+Jue 8 · 10:00 · sesión 4/8</textarea>
+      </div>
+
+      <div id="bloqueTarifa">
+        <label for="tarifa">Tarifa</label>
+        <select id="tarifa"></select>
+      </div>
+
+      <label for="cancel">Política de cancelación</label>
+      <select id="cancel">
+        <option value="Si no avisas o no vienes, se aplicará un recargo.">Se aplicará un recargo</option>
+        <option value="Si cancelas con menos de 24 h o no vienes, la sesión cuenta como realizada.">La sesión cuenta como realizada</option>
+      </select>
+    </div>
+
+    <div class="card">
+      <h2>Correo listo para copiar</h2>
+      <label>Asunto</label>
+      <div class="asunto" id="asunto"></div>
+      <div class="btns" style="margin-bottom:16px">
+        <button class="main" id="copiarCorreo" type="button">Copiar correo</button>
+        <button id="copiarAsunto" type="button">Copiar asunto</button>
+      </div>
+      <div class="preview" id="preview"></div>
+      <p style="font-size:13px;color:var(--grey);margin:14px 0 0">Si Gmail añade también tu firma al pegar, bórrala: el correo ya la lleva con el logo. Para que salga el diseño completo, pega desde Gmail en el ordenador; la app de Gmail del móvil lo simplifica.</p>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script src="plantilla-email.js"></script>
+<script>
+const TARIFAS = [
+  ["", "Sin tarifa"],
+  ["Precio|60 € (Valoración funcional)", "Valoración funcional · 60 €"],
+  ["Precio|55 € (Sesión suelta)", "Sesión suelta · 55 €"],
+  ["Tarifa|Postoperatorio · Fase intensiva · 400 €/mes (pago el día 1 de cada mes)", "Postoperatorio · Fase intensiva · 400 €/mes"],
+  ["Tarifa|Postoperatorio · Fase consolidación · 200 €/mes (pago el día 1 de cada mes)", "Postoperatorio · Fase consolidación · 200 €/mes"],
+  ["Tarifa|Vuelta al deporte · 1 por semana · 200 €/mes (pago el día 1 de cada mes)", "Vuelta al deporte · 1/semana · 200 €/mes"],
+  ["Tarifa|Vuelta al deporte · 2 por semana · 380 €/mes (pago el día 1 de cada mes)", "Vuelta al deporte · 2/semana · 380 €/mes"],
+  ["Tarifa|Dolor persistente · 200 €/mes (pago el día 1 de cada mes)", "Dolor persistente · 200 €/mes"],
+  ["Tarifa|Salud activa · Individual · 200 €/mes (pago el día 1 de cada mes)", "Salud activa · Individual · 200 €/mes"],
+  ["Tarifa|Salud activa · En pareja · 140 €/mes por persona (pago el día 1 de cada mes)", "Salud activa · En pareja · 140 €/mes"],
+  ["Tarifa|Rendimiento presencial · 1 por semana · 220 €/mes (pago el día 1 de cada mes)", "Rendimiento · 1/semana · 220 €/mes"],
+  ["Tarifa|Rendimiento presencial · 2 por semana · 400 €/mes (pago el día 1 de cada mes)", "Rendimiento · 2/semana · 400 €/mes"],
+  ["Tarifa|Plan mantenimiento · 120 €/mes (pago el día 1 de cada mes)", "Plan mantenimiento · 120 €/mes"],
+  ["Tarifa|Sesiones en pareja · 4 al mes · 140 €/mes por persona (pago el día 1 de cada mes)", "Pareja · 4 al mes · 140 €"],
+  ["Tarifa|Sesiones en pareja · 6 al mes · 200 €/mes por persona (pago el día 1 de cada mes)", "Pareja · 6 al mes · 200 €"]
+];
+const DIAS = ["domingo","lunes","martes","miércoles","jueves","viernes","sábado"];
+const MESES = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+const $ = id => document.getElementById(id);
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+const P = window.PlantillaEmail;
+
+$("tarifa").innerHTML = TARIFAS.map(([v, t]) => `<option value="${v}">${t}</option>`).join("");
+$("tarifa").selectedIndex = 3;
+(() => { const d = new Date(); d.setDate(d.getDate() + 1); if (d.getDay() === 0) d.setDate(d.getDate() + 1); $("fecha").value = d.toISOString().slice(0,10); })();
+
+function datos(){
+  const tipo = $("tipo").value, nombre = $("nombre").value.trim() || "…", hora = $("hora").value || "…";
+  const f = $("fecha").value ? new Date($("fecha").value + "T12:00") : new Date();
+  const dia = DIAS[f.getDay()], n = f.getDate(), mes = MESES[f.getMonth()];
+  const cancel = $("cancel").value, tar = $("tarifa").value;
+  const filaTarifa = tar ? [tar.split("|")[0], tar.split("|")[1]] : null;
+  if (tipo === "recordatorio") {
+    const antes = DIAS[(f.getDay() + 6) % 7];
+    return { etiqueta:"Recordatorio", titulo:"Nos vemos el " + dia, nombre,
+      asunto:`Recordatorio: tu sesión del ${dia} a las ${hora}`,
+      intro:`te recuerdo tu sesión del ${dia} ${n} a las ${hora}.`,
+      lineas:[["Día", `${cap(dia)} ${n} de ${mes}`], ["Hora", hora], ["Lugar", P.LUGAR]],
+      nota:`Si necesitas cancelar, avísame antes del ${antes} a las ${hora} respondiendo a este correo. ${cancel}` };
+  }
+  if (tipo === "semana") {
+    const lineas = $("lista").value.split("\n").map(l => l.trim()).filter(Boolean).map(l => { const p = l.split("·"); return [p.shift().trim(), p.join("·").trim() || "—"]; });
+    lineas.push(["Lugar", P.LUGAR]); if (filaTarifa) lineas.push(filaTarifa);
+    return { etiqueta:"Tu semana", titulo:"Tus sesiones de la semana", nombre,
+      asunto:"Tus sesiones de la semana", intro:"estas son tus sesiones de la semana:", lineas,
+      nota:`Si no puedes venir a alguna, avísame con al menos 24 horas de antelación respondiendo a este correo. ${cancel}` };
+  }
+  const lineas = [["Día", `${cap(dia)} ${n} de ${mes}`], ["Hora", hora], ["Lugar", P.LUGAR]];
+  if ($("sesion").value.trim()) lineas.push(["Sesión", $("sesion").value.trim()]);
+  if (filaTarifa) lineas.push(filaTarifa);
+  return { etiqueta:"Reserva confirmada", titulo:"Tu próxima sesión", nombre,
+    asunto:`Reserva confirmada · ${cap(dia)} ${n} de ${mes}, ${hora}`,
+    intro:"te confirmo tu próxima sesión de readaptación:", lineas,
+    nota:`Si no puedes venir, avísame con al menos 24 horas de antelación respondiendo a este correo. ${cancel}` };
+}
+function pintar(){
+  const t = $("tipo").value;
+  $("bloqueSesion").hidden = t === "semana"; $("bloqueSemana").hidden = t !== "semana"; $("bloqueNum").hidden = t !== "reserva"; $("bloqueTarifa").hidden = t === "recordatorio";
+  const d = datos();
+  $("asunto").textContent = d.asunto;
+  $("preview").innerHTML = P.bloque(d, "logo.png");
+}
+function toast(t){ const el = $("toast"); el.textContent = t; el.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => el.hidden = true, 2200); }
+document.querySelectorAll("input,select,textarea").forEach(el => el.addEventListener("input", pintar));
+$("copiarCorreo").onclick = async () => { try { await P.copiar(datos()); toast("Correo copiado. Pégalo en Gmail con Ctrl+V"); } catch(e) { toast("No se ha podido copiar"); } };
+$("copiarAsunto").onclick = async () => { try { await navigator.clipboard.writeText(datos().asunto); toast("Asunto copiado"); } catch(e) { toast("No se ha podido copiar"); } };
+pintar();
+</script>
+</body>
+</html>

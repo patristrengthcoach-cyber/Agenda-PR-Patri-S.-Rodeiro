@@ -3,6 +3,6 @@
 // La clave "publishable" (o "anon public") es pública por diseño: se puede subir a GitHub.
 // NUNCA pegues aquí la clave "secret" ni la "service_role".
 window.CONFIG = {
-  SUPABASE_URL: "https://supabase.com/dashboard/project/tlsukenumechkfdbzxcr",
+  SUPABASE_URL: "https://tlsukenumechkfdbzxcr.supabase.co",
   SUPABASE_ANON_KEY: "sb_publishable_S3NHior3yyQ8Bl10TnzXzA_7gMXFydn"
 };

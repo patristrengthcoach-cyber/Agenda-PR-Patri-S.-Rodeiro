@@ -59,7 +59,7 @@ main{max-width:1180px;margin:0 auto;padding:22px 18px 110px}
 .phead h1{margin:0;font-size:26px;font-weight:800;letter-spacing:-.02em;line-height:1.15}
 .phead p{margin:6px 0 0;font-size:11.5px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
 .pactions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px);z-index:20;display:grid;grid-template-columns:repeat(4,1fr)}
+nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px);z-index:20;display:grid;grid-template-columns:repeat(5,1fr)}
 nav.tabs button{background:none;border:0;padding:9px 4px 10px;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:12px;font-weight:600;color:var(--muted)}
 nav.tabs button svg.i{width:21px;height:21px}
 nav.tabs button{position:relative}
@@ -89,6 +89,11 @@ nav.tabs button[aria-current="page"] svg.i{filter:drop-shadow(0 3px 0 var(--acce
 .login .lnk{background:none;border:0;color:var(--ink);text-decoration:underline;text-decoration-color:var(--accent);text-decoration-thickness:2px;text-underline-offset:3px;font-weight:600;font-size:13.5px;padding:10px 0 0}
 .badge{position:absolute;top:4px;right:calc(50% - 22px);min-width:18px;height:18px;border-radius:9px;background:var(--accent);color:var(--accent-ink);font-size:11px;font-weight:800;display:grid;place-items:center;padding:0 5px}
 .side nav .badge{position:static;margin-left:auto}
+.vwrap{display:none}
+.modo-val .vwrap{display:block;height:calc(100vh - 64px - 62px - env(safe-area-inset-bottom,0px));height:calc(100dvh - 64px - 62px - env(safe-area-inset-bottom,0px))}
+.modo-val main{display:none}
+.vwrap iframe{display:block;width:100%;height:100%;border:0;background:var(--bg)}
+@media (min-width:960px){.modo-val .vwrap{height:100vh;height:100dvh}}
 .quien{color:#fff;font-weight:700;font-size:13px;margin-bottom:4px}
 .dot{width:8px;height:8px;border-radius:50%;background:#4ADE80;display:inline-block}
 .dot.off{background:var(--amber)}
@@ -181,6 +186,8 @@ button.q:hover,button.q:focus-visible{background:var(--accent-soft);color:var(--
 .chip:hover{filter:brightness(.97)}
 .chip.hecha{background:var(--green-soft)}.chip.hecha::before{background:var(--green)}
 .chip.noshow,.chip.tarde{background:var(--red-soft)}.chip.noshow::before,.chip.tarde::before{background:var(--red)}
+.chip.val.programada{background:var(--accent-soft)}
+.chip.val.programada::before{background:var(--accent)}
 .chip.unsent{outline:1.5px dashed var(--amber);outline-offset:-1.5px}
 .chip.cancelada{justify-self:end;width:40px;background:var(--surface-2);border:1px dashed var(--line);box-shadow:none;padding:5px;text-align:center;color:var(--muted)}
 .chip.cancelada::before{display:none}
@@ -261,6 +268,7 @@ tr:last-child td{border-bottom:0}
   <div class="content">
     <div class="mtop"><img src="logo.png" alt="Patri S. Rodeiro · Readaptación y rendimiento" width="900" height="225"><button class="logout" data-logout="1" style="margin-top:0">Salir</button></div>
     <main id="main"></main>
+    <div class="vwrap" id="vwrap"></div>
   </div>
 </div>
 <nav class="tabs" id="tabs" aria-label="Secciones"></nav>
@@ -276,6 +284,7 @@ const IC = {
   hoy:'<path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
   semana:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
   clientes:'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-5.5 6.5-5.5s6.5 1.9 6.5 5.5"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M21.5 20c0-2.6-1.4-4.4-3.5-5.1"/>',
+  valoraciones:'<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M9 11l2 2 4-4M9 17h6"/>',
   mes:'<path d="M4 20V11M10 20V5M16 20v-6M21 20H3"/>',
   wa:'<path d="M20.5 12a8.5 8.5 0 0 1-12.6 7.4L3.5 20.5l1.1-4.2A8.5 8.5 0 1 1 20.5 12z"/>',
   copy:'<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h8"/>',
@@ -324,7 +333,11 @@ const iniciales = n => n.trim().split(/\s+/).slice(0,2).map(p => p[0]).join("").
 const phoneIntl = p => { let d = String(p||"").replace(/\D/g,""); if (d.startsWith("00")) d = d.slice(2); if (d.length === 9) d = "34"+d; return d; };
 const endMin = date => { const w = parse(date).getDay(); return w === 6 ? 13*60 : w === 0 ? 0 : 21*60; };
 const slotsFor = date => { const o=[]; for (let m=540; m+DURACION<=endMin(date); m+=DURACION) o.push(m); return o; };
-const timeOptions = date => { const o=[]; const e = endMin(date) || 21*60; for (let m=540; m+DURACION<=e; m+=15) o.push(fromMin(m)); return o; };
+const timeOptions = (date, dur) => { dur = dur || DURACION; const o=[]; const e = endMin(date) || 21*60; for (let m=540; m+dur<=e; m+=15) o.push(fromMin(m)); return o; };
+const DUR = { sesion:45, valoracion:60 };
+const esVal = s => !!s && s.tipo === "valoracion";
+const durDe = s => esVal(s) ? DUR.valoracion : DUR.sesion;
+const nombreTipo = s => esVal(s) ? "Valoración funcional · 60 min" : "Sesión de readaptación · 45 min";
 
 /* ---------- Estado y guardado ---------- */
 const TARIFAS_2026 = [
@@ -350,7 +363,7 @@ const TIPOS = { sesion:"Por sesión", mes:"Mensual", bono:"Bono" };
 const tipoDe = t => t.tipo || (t.sesiones > 1 ? "bono" : "sesion");
 let S = { clientes:{}, sesiones:{}, tarifas: TARIFAS_2026.slice() };
 let me = { id:null, name:"" }, copiaCompartida = null;
-const ui = { tab:"hoy", week: mondayOf(new Date()), day: todayStr(), month: todayStr().slice(0,7), q:"" };
+const ui = { grupo:"", tab:"hoy", week: mondayOf(new Date()), day: todayStr(), month: todayStr().slice(0,7), q:"" };
 if (parse(ui.day).getDay() === 0) { ui.week = addDays(ui.week,7); ui.day = ymd(ui.week); }
 
 const queues = {};
@@ -483,7 +496,7 @@ const activa = s => s.estado !== "cancelada";
 const cobrable = s => ESTADOS[s.estado]?.cobra;
 const delDia = f => ses().filter(s => s.fecha === f).sort(byTime);
 function numEnMes(s){ const l = ses().filter(x => x.clienteId === s.clienteId && mkey(x.fecha) === mkey(s.fecha) && activa(x)).sort(byTime); return { n: l.findIndex(x => x.id === s.id)+1, total: l.length }; }
-function maxSeguidas(f){ const l = delDia(f).filter(activa).map(s => toMin(s.hora)); let best = l.length?1:0, run = 1; for (let i=1;i<l.length;i++){ if (l[i]-l[i-1] <= DURACION){ run++; best = Math.max(best,run); } else run = 1; } return best; }
+function maxSeguidas(f){ const l = delDia(f).filter(activa).map(s => ({ a:toMin(s.hora), b:toMin(s.hora)+durDe(s) })); let best = l.length?1:0, run = 1; for (let i=1;i<l.length;i++){ if (l[i].a <= l[i-1].b){ run++; best = Math.max(best,run); } else run = 1; } return best; }
 const eur = n => (Number(n)||0).toLocaleString("es-ES", { minimumFractionDigits: Number(n) % 1 ? 2 : 0, maximumFractionDigits: 2 }) + " €";
 const tarifaDe = cid => { const c = S.clientes[cid]; return c && c.tarifaId ? S.tarifas.find(t => t.id === c.tarifaId) : null; };
 function lineaTarifa(cid){
@@ -496,9 +509,9 @@ function lineaTarifa(cid){
 const esMensual = cid => { const t = tarifaDe(cid); return !!t && tipoDe(t) === "mes"; };
 async function guardarTarifas(){ render(); const { error } = await sb.from("ajustes").upsert({ id:"tarifas", data:{ lista:S.tarifas } }); if (error) toast("No se han podido guardar las tarifas."); }
 let cacheNum = {};
-function anteriorActiva(clienteId, fecha, hora, excluir){ const k = fecha+hora; return ses().filter(x => x.clienteId === clienteId && x.id !== excluir && activa(x) && (x.fecha+x.hora) < k).sort(byTime).pop(); }
+function anteriorActiva(clienteId, fecha, hora, excluir){ const k = fecha+hora; return ses().filter(x => x.clienteId === clienteId && x.id !== excluir && activa(x) && !esVal(x) && (x.fecha+x.hora) < k).sort(byTime).pop(); }
 function numMes(clienteId, fecha, hora, excluir, nueva){
-  const lista = ses().filter(x => x.clienteId === clienteId && x.id !== excluir && activa(x) && mkey(x.fecha) === mkey(fecha));
+  const lista = ses().filter(x => x.clienteId === clienteId && x.id !== excluir && activa(x) && !esVal(x) && mkey(x.fecha) === mkey(fecha));
   const antes = lista.filter(x => (x.fecha+x.hora) < fecha+hora).length;
   return { num: antes + 1, total: lista.length + 1, mes:true };
 }
@@ -517,26 +530,39 @@ function numEf(s){
   if (esMensual(s.clienteId)) { const e = numMes(s.clienteId, s.fecha, s.hora, s.id); return (cacheNum[s.id] = activa(s) ? e : { num:e.num, total:e.total-1, mes:true }); }
   return (cacheNum[s.id] = sugerirNum(s.clienteId, s.fecha, s.hora, s.id));
 }
-const etiquetaNum = s => { const e = numEf(s); return e.total ? `${e.num}/${e.total}` : `nº ${e.num}`; };
+const etiquetaNum = s => { if (esVal(s)) return "Valoración"; const e = numEf(s); return e.total ? `${e.num}/${e.total}` : `nº ${e.num}`; };
+function precioValoracion(){ const t = S.tarifas.find(t => t.id === "t26-val") || S.tarifas.find(t => /valoraci/i.test(t.nombre)); return t ? t.precio : 60; }
+function precioSuelta(){ const t = S.tarifas.find(t => t.id === "t26-suelta") || S.tarifas.find(t => tipoDe(t) === "sesion" && /suelta/i.test(t.nombre)); return t ? t.precio : null; }
+function precioDe(s){
+  if (s.precio != null && s.precio !== "") return eur(s.precio);
+  if (esVal(s)) return eur(precioValoracion());
+  const t = tarifaDe(s.clienteId);
+  if (!t) { const p = precioSuelta(); return p != null ? eur(p) : ""; }
+  const tp = tipoDe(t);
+  if (tp === "sesion") return eur(t.precio);
+  if (tp === "mes") return `Incluida en tu plan mensual (${t.nombre} · ${eur(t.precio)}/mes, pago el día 1)`;
+  return `Incluida en tu ${t.nombre} (${eur(t.precio)})`;
+}
 function siguienteLaborable(){ let d = addDays(new Date(),1); if (d.getDay() === 0) d = addDays(d,1); return ymd(d); }
 
 /* ---------- Mensajes ---------- */
 function msgReserva(s){
-  const c = cli(s.clienteId), e = numEf(s);
-  const linea = e.total ? `Es tu sesión ${e.num} de ${e.total}${e.mes ? " de " + MESES[parse(s.fecha).getMonth()] : ""}.` : `Es tu sesión nº ${e.num}.`;
-  return `Hola ${c.nombre.split(" ")[0]}! 👋 Te confirmo tu sesión:\n\n📅 ${cap(fechaLarga(s.fecha))} a las ${s.hora}\n📍 ${LUGAR}${lineaTarifa(s.clienteId) ? "\n💶 " + lineaTarifa(s.clienteId) : ""}\n\n${linea}\n\nSi no puedes venir, avísame con al menos 24 h de antelación. ${CANCELACION}\n\n${FIRMA}`;
+  const c = cli(s.clienteId), val = esVal(s), pr = precioDe(s);
+  let linea = "";
+  if (!val) { const e = numEf(s); linea = e.total ? `Es tu sesión ${e.num} de ${e.total}${e.mes ? " de " + MESES[parse(s.fecha).getMonth()] : ""}.` : `Es tu sesión nº ${e.num}.`; }
+  return `Hola ${c.nombre.split(" ")[0]}! 👋 Te confirmo tu ${val ? "valoración funcional" : "sesión"}:\n\n📅 ${cap(fechaLarga(s.fecha))} a las ${s.hora}\n⏱️ ${durDe(s)} min\n📍 ${LUGAR}${pr ? "\n💶 Precio: " + pr : ""}${linea ? "\n\n" + linea : ""}\n\nSi no puedes venir, avísame con al menos 24 h de antelación. ${CANCELACION}\n\n${FIRMA}`;
 }
 function msgRecordatorio(s){
-  const c = cli(s.clienteId), d = parse(s.fecha), manana = s.fecha === ymd(addDays(new Date(),1));
+  const c = cli(s.clienteId), d = parse(s.fecha), manana = s.fecha === ymd(addDays(new Date(),1)), pr = precioDe(s);
   const cuando = manana ? `mañana, ${DIAS[d.getDay()]} ${d.getDate()},` : `del ${DIAS[d.getDay()]} ${d.getDate()}`;
   const limite = manana ? `hoy antes de las ${s.hora}` : `antes del ${DIAS[addDays(d,-1).getDay()]} a las ${s.hora}`;
-  return `Hola ${c.nombre.split(" ")[0]}! Te recuerdo tu sesión ${cuando} a las ${s.hora}.\n\nSi necesitas cancelar, avísame ${limite} para evitar el recargo.\n\n¡Nos vemos! 💪\nPatri`;
+  return `Hola ${c.nombre.split(" ")[0]}! Te recuerdo tu ${esVal(s) ? "valoración funcional" : "sesión"} ${cuando} a las ${s.hora} (${durDe(s)} min).\n\n📍 ${LUGAR}${pr ? "\n💶 Precio: " + pr : ""}\n\nSi necesitas cancelar, avísame ${limite}. ${CANCELACION}\n\n¡Nos vemos! 💪\nPatri`;
 }
 function msgSemana(cid, lunes){
   const c = cli(cid), ini = ymd(lunes), fin = ymd(addDays(lunes,6));
   const l = ses().filter(s => s.clienteId === cid && s.fecha >= ini && s.fecha <= fin && activa(s)).sort(byTime);
   if (!l.length) return "";
-  const lineas = l.map(s => { const d = parse(s.fecha); return `• ${cap(DIAS[d.getDay()])} ${d.getDate()} · ${s.hora} (sesión ${etiquetaNum(s)})`; }).join("\n");
+  const lineas = l.map(s => { const d = parse(s.fecha); return `• ${cap(DIAS[d.getDay()])} ${d.getDate()} · ${s.hora} (${esVal(s) ? `valoración, 60 min · ${precioDe(s)}` : `sesión ${etiquetaNum(s)}`})`; }).join("\n");
   return `Hola ${c.nombre.split(" ")[0]}! 👋 Estas son tus sesiones de la semana:\n\n${lineas}\n\n📍 ${LUGAR}${lineaTarifa(cid) ? "\n💶 " + lineaTarifa(cid) : ""}\n\nSi no puedes venir a alguna, avísame con al menos 24 h de antelación. ${CANCELACION}\n\n${FIRMA}`;
 }
 function avisoPegar(c, m){
@@ -547,34 +573,42 @@ function avisoPegar(c, m){
       <li>Haz clic en el cuerpo del correo y pega con <b>Ctrl+V</b> (en Mac, <b>Cmd+V</b>).</li>
       <li>Si Gmail añade también tu firma, bórrala: el correo ya la lleva con el logo.</li>
       <li>Pulsa <b>Enviar</b>.</li></ol>
-     <div class="f"><span class="flabel">Asunto</span><div class="msgbox" style="margin:0">${esc(m.asunto)}</div></div>`,
-    `<button class="btn" id="casu">${ic("copy")}Copiar asunto</button><div class="acts"><button class="btn" data-close="1">Cerrar</button><a class="btn primary" href="${gmail}" target="_blank" rel="noopener" style="text-decoration:none">${ic("mail")}Abrir Gmail</a></div>`);
-  document.getElementById("casu").onclick = () => copiar(m.asunto);
+     <div class="f"><span class="flabel">Para</span><div style="display:flex;gap:8px;align-items:stretch"><div class="msgbox" style="margin:0;flex:1;min-width:0;overflow-wrap:anywhere">${esc(c.email)}</div><button class="btn" id="cpara" type="button">${ic("copy")}Copiar</button></div></div>
+     <div class="f"><span class="flabel">Asunto</span><div style="display:flex;gap:8px;align-items:stretch"><div class="msgbox" style="margin:0;flex:1;min-width:0">${esc(m.asunto)}</div><button class="btn" id="casu" type="button">${ic("copy")}Copiar</button></div></div>
+     <div class="f" style="margin:0"><span class="flabel">Cuerpo del correo</span><button class="btn" id="ccuerpo" type="button" style="width:100%;justify-content:center">${ic("copy")}Copiar el correo otra vez</button></div>`,
+    `<span></span><div class="acts"><button class="btn" data-close="1">Cerrar</button><a class="btn primary" href="${gmail}" target="_blank" rel="noopener" style="text-decoration:none">${ic("mail")}Abrir Gmail</a></div>`);
+  const hecho = (b, t) => { b.innerHTML = `${ic("check")}${t}`; };
+  document.getElementById("cpara").onclick = async e => { await copiar(c.email); hecho(e.currentTarget, "Copiado"); };
+  document.getElementById("casu").onclick = async e => { await copiar(m.asunto); hecho(e.currentTarget, "Copiado"); };
+  document.getElementById("ccuerpo").onclick = async e => { const b = e.currentTarget; try { await PlantillaEmail.copiar(m); hecho(b, "Correo copiado"); toast("Correo copiado"); } catch(_) { toast("No se ha podido copiar"); } };
 }
 function planoDe(m){ return `Hola ${m.nombre}:\n\n${m.intro}\n\n${m.lineas.map(([k,v]) => `· ${k}: ${v}`).join("\n")}\n\n${m.nota}\n\nUn saludo,\n`; }
 function emailReserva(s){
-  const c = cli(s.clienteId), e = numEf(s), d = parse(s.fecha), tar = lineaTarifa(s.clienteId);
-  const lineas = [["Día", cap(fechaLarga(s.fecha))], ["Hora", s.hora], ["Lugar", LUGAR], ["Sesión", e.total ? `${e.num} de ${e.total}${e.mes ? " de " + MESES[d.getMonth()] : ""}` : `nº ${e.num}`]];
-  if (tar) lineas.push(tar.startsWith("Precio") ? ["Precio", tar.replace(/^Precio: /, "")] : ["Tarifa", tar.replace(/^Tarifa: /, "")]);
-  return { tipo:"reserva", etiqueta:"Reserva confirmada", titulo:"Tu próxima sesión", nombre:c.nombre.split(" ")[0],
-    asunto:`Reserva confirmada · ${cap(DIAS[d.getDay()])} ${d.getDate()} de ${MESES[d.getMonth()]}, ${s.hora}`,
-    intro:"te confirmo tu próxima sesión de readaptación:", lineas,
+  const c = cli(s.clienteId), d = parse(s.fecha), val = esVal(s), pr = precioDe(s);
+  const lineas = [["Tipo", nombreTipo(s)], ["Día", cap(fechaLarga(s.fecha))], ["Hora", s.hora], ["Lugar", LUGAR]];
+  if (!val) { const e = numEf(s); lineas.push(["Sesión", e.total ? `${e.num} de ${e.total}${e.mes ? " de " + MESES[d.getMonth()] : ""}` : `nº ${e.num}`]); }
+  if (pr) lineas.push(["Precio", pr]);
+  return { tipo:"reserva", etiqueta: val ? "Valoración confirmada" : "Reserva confirmada", titulo: val ? "Tu valoración funcional" : "Tu próxima sesión", nombre:c.nombre.split(" ")[0],
+    asunto:`${val ? "Valoración confirmada" : "Reserva confirmada"} · ${cap(DIAS[d.getDay()])} ${d.getDate()} de ${MESES[d.getMonth()]}, ${s.hora}`,
+    intro: val ? "te confirmo tu valoración funcional. Haremos entrevista, tests de fuerza, movilidad y función, y después recibirás un informe escrito con tu propuesta de programa:" : "te confirmo tu próxima sesión de readaptación:", lineas,
     nota:`Si no puedes venir, avísame con al menos 24 horas de antelación respondiendo a este correo. ${CANCELACION}` };
 }
 function emailRecordatorio(s){
-  const c = cli(s.clienteId), d = parse(s.fecha), manana = s.fecha === ymd(addDays(new Date(),1));
+  const c = cli(s.clienteId), d = parse(s.fecha), manana = s.fecha === ymd(addDays(new Date(),1)), val = esVal(s), pr = precioDe(s);
   const cuando = manana ? `mañana, ${DIAS[d.getDay()]} ${d.getDate()},` : `del ${DIAS[d.getDay()]} ${d.getDate()}`;
   const limite = manana ? `hoy antes de las ${s.hora}` : `antes del ${DIAS[addDays(d,-1).getDay()]} a las ${s.hora}`;
+  const lineas = [["Tipo", nombreTipo(s)], ["Día", cap(fechaLarga(s.fecha))], ["Hora", s.hora], ["Lugar", LUGAR]];
+  if (pr) lineas.push(["Precio", pr]);
   return { tipo:"recordatorio", etiqueta:"Recordatorio", titulo: manana ? "Nos vemos mañana" : `Nos vemos el ${DIAS[d.getDay()]}`, nombre:c.nombre.split(" ")[0],
-    asunto:`Recordatorio: tu sesión ${manana ? "de mañana" : "del " + DIAS[d.getDay()]} a las ${s.hora}`,
-    intro:`te recuerdo tu sesión ${cuando} a las ${s.hora}.`, lineas:[["Día", cap(fechaLarga(s.fecha))], ["Hora", s.hora], ["Lugar", LUGAR]],
+    asunto:`Recordatorio: tu ${val ? "valoración" : "sesión"} ${manana ? "de mañana" : "del " + DIAS[d.getDay()]} a las ${s.hora}`,
+    intro:`te recuerdo tu ${val ? "valoración funcional" : "sesión"} ${cuando} a las ${s.hora}.${val ? " Ven con ropa cómoda para hacer los tests." : ""}`, lineas,
     nota:`Si necesitas cancelar, avísame ${limite} respondiendo a este correo. ${CANCELACION}` };
 }
 function emailSemana(cid, lunes){
   const c = cli(cid), ini = ymd(lunes), fin = ymd(addDays(lunes,6)), tar = lineaTarifa(cid);
   const l = ses().filter(s => s.clienteId === cid && s.fecha >= ini && s.fecha <= fin && activa(s)).sort(byTime);
   if (!l.length) return null;
-  const lineas = l.map(s => { const d = parse(s.fecha); return [`${cap(DABR[d.getDay()])} ${d.getDate()}`, `${s.hora} · sesión ${etiquetaNum(s)}`]; });
+  const lineas = l.map(s => { const d = parse(s.fecha); return [`${cap(DABR[d.getDay()])} ${d.getDate()}`, esVal(s) ? `${s.hora} · valoración (60 min) · ${precioDe(s)}` : `${s.hora} · sesión ${etiquetaNum(s)}`]; });
   lineas.push(["Lugar", LUGAR]);
   if (tar) lineas.push(tar.startsWith("Precio") ? ["Precio", tar.replace(/^Precio: /, "")] : ["Tarifa", tar.replace(/^Tarifa: /, "")]);
   return { tipo:"semana", etiqueta:"Tu semana", titulo:`Semana del ${lunes.getDate()} de ${MESES[lunes.getMonth()]}`, nombre:c.nombre.split(" ")[0],
@@ -612,7 +646,7 @@ async function copiar(t){
 function enviar(tel, t, done){ window.open(waLink(tel,t), "_blank", "noopener"); if (done) done(); }
 
 /* ---------- Navegación ---------- */
-const TABS = [["hoy","Hoy"],["semana","Semana"],["clientes","Clientes"],["mes","Mes"]];
+const TABS = [["hoy","Hoy"],["semana","Semana"],["clientes","Clientes"],["valoraciones","Valoraciones"],["mes","Mes"]];
 function pendientes(){
   const hoy = todayStr(), sig = siguienteLaborable();
   const reservas = ses().filter(s => s.estado === "programada" && s.fecha >= hoy && !s.reservaEnviada).length;
@@ -639,6 +673,13 @@ document.addEventListener("click", e => { const b = e.target.closest("[data-tab]
 
 function render(){
   cacheNum = {}; actualizarAvisos();
+  const enVal = ui.tab === "valoraciones";
+  document.getElementById("app").classList.toggle("modo-val", enVal);
+  if (enVal) {
+    const w = document.getElementById("vwrap");
+    if (!w.firstChild) w.innerHTML = `<iframe src="valoraciones/index.html" title="Valoraciones" allow="clipboard-write; fullscreen"></iframe>`;
+    return;
+  }
   const main = document.getElementById("main"), y = window.scrollY;
   const focusId = document.activeElement && document.activeElement.id;
   main.innerHTML = ({ hoy:vHoy, semana:vSemana, clientes:vClientes, mes:vMes })[ui.tab]();
@@ -660,7 +701,7 @@ const vacio = t => `<div class="empty">${ic("check")}${t}</div>`;
 const saludo = () => { const x = new Date().getHours(); return x < 14 ? "Buenos días" : x < 21 ? "Buenas tardes" : "Buenas noches"; };
 function vHoy(){
   const hoy = todayStr(), now = new Date(), nowMin = now.getHours()*60+now.getMinutes();
-  const porMarcar = ses().filter(s => s.estado === "programada" && (s.fecha < hoy || (s.fecha === hoy && toMin(s.hora)+DURACION <= nowMin))).sort(byTime);
+  const porMarcar = ses().filter(s => s.estado === "programada" && (s.fecha < hoy || (s.fecha === hoy && toMin(s.hora)+durDe(s) <= nowMin))).sort(byTime);
   const sig = siguienteLaborable(), recs = delDia(sig).filter(activa), deHoy = delDia(hoy);
   const sinReserva = ses().filter(s => s.estado === "programada" && s.fecha >= hoy && !s.reservaEnviada).sort(byTime);
   const deben = {}; ses().filter(s => cobrable(s) && !s.pagado).forEach(s => (deben[s.clienteId] ||= []).push(s));
@@ -703,8 +744,8 @@ function chipHtml(s, col){
   const r = Math.round((toMin(s.hora)-T0)/15); if (r < 0 || r >= NROWS) return "";
   const pago = cobrable(s) || s.pagado ? `<i class="mini ${s.pagado?"paid":"unpaid"}" title="${s.pagado?"Pagado":"Sin pagar"}"></i>` : "";
   const unsent = s.estado === "programada" && !s.reservaEnviada ? " unsent" : "";
-  if (!activa(s)) return `<button class="chip cancelada" style="grid-row:${r+2}/span 3;grid-column:${col}" data-open="${s.id}" title="${esc(cli(s.clienteId).nombre)} · canceló a tiempo"><b>${esc(iniciales(cli(s.clienteId).nombre))}</b></button>`;
-  return `<button class="chip ${s.estado}${unsent}" style="grid-row:${r+2}/span 3;grid-column:${col}" data-open="${s.id}"><b>${esc(cli(s.clienteId).nombre)}</b><small>${s.hora} · ${etiquetaNum(s)} ${pago}</small></button>`;
+  if (!activa(s)) return `<button class="chip cancelada" style="grid-row:${r+2}/span ${durDe(s)/15};grid-column:${col}" data-open="${s.id}" title="${esc(cli(s.clienteId).nombre)} · canceló a tiempo"><b>${esc(iniciales(cli(s.clienteId).nombre))}</b></button>`;
+  return `<button class="chip ${s.estado}${unsent}${esVal(s) ? " val" : ""}" style="grid-row:${r+2}/span ${durDe(s)/15};grid-column:${col}" data-open="${s.id}"><b>${esc(cli(s.clienteId).nombre)}</b><small>${s.hora} · ${etiquetaNum(s)} ${pago}</small></button>`;
 }
 function calGrid(dias, conCabecera){
   const hoy = todayStr(), cols = dias.length;
@@ -741,7 +782,7 @@ function vSemana(){
     <div class="kpi"><div class="v">${Math.max(CAPACIDAD-act,0)}</div><div class="l">Huecos hasta tu objetivo</div></div>
     <div class="kpi"><div class="v">${hechas}</div><div class="l">Hechas</div></div>
     <div class="kpi"><div class="v">${semana.filter(s => s.estado === "programada" && !s.reservaEnviada).length}</div><div class="l">Reservas sin enviar</div></div></div>`;
-  const legend = `<div class="legend"><span><i class="sw" style="background:var(--blue)"></i>Programada</span><span><i class="sw" style="background:var(--green)"></i>Hecha</span><span><i class="sw" style="background:var(--red)"></i>No vino o canceló tarde</span><span><i class="sw unsent-sw"></i>Reserva sin enviar</span><span><i class="mini unpaid"></i>Sin pagar</span><span><i class="mini paid"></i>Pagado</span></div>`;
+  const legend = `<div class="legend"><span><i class="sw" style="background:var(--blue)"></i>Sesión</span><span><i class="sw" style="background:var(--accent)"></i>Valoración</span><span><i class="sw" style="background:var(--green)"></i>Hecha</span><span><i class="sw" style="background:var(--red)"></i>No vino o canceló tarde</span><span><i class="sw unsent-sw"></i>Reserva sin enviar</span><span><i class="mini unpaid"></i>Sin pagar</span><span><i class="mini paid"></i>Pagado</span></div>`;
   h += `<div class="wk-desk"><section class="panel"><div class="ph"><h2>Calendario</h2><span class="hint">Pulsa un hueco para añadir una sesión</span></div><div class="cal-wrap">${calGrid(dias, true)}</div>${legend}</section></div>`;
   let mob = `<div class="days">${dias.map(f => { const d = parse(f); return `<button data-day="${f}" aria-pressed="${f===ui.day}"><b>${DABR[d.getDay()]}</b><span>${d.getDate()}</span><em>${delDia(f).filter(activa).length} ses.</em></button>`; }).join("")}</div>`;
   const seg = maxSeguidas(ui.day);
@@ -753,19 +794,97 @@ function vSemana(){
 
 /* ---------- Vista: Clientes ---------- */
 function vClientes(){
-  const mes = todayStr().slice(0,7), q = ui.q.trim().toLowerCase();
+  const mes = todayStr().slice(0,7), q = normNombre(ui.q);
   const todos = Object.values(S.clientes).sort((a,b) => a.nombre.localeCompare(b.nombre,"es"));
-  const l = todos.filter(c => !q || c.nombre.toLowerCase().includes(q) || (c.telefono||"").includes(q) || (c.email||"").toLowerCase().includes(q));
+  const grupos = [...new Set(todos.map(c => c.grupo).filter(Boolean))].sort();
+  if (ui.grupo && !grupos.includes(ui.grupo)) ui.grupo = "";
+  const l = todos.filter(c => (!ui.grupo || c.grupo === ui.grupo) && (!q || normNombre(c.nombre).includes(q) || (c.telefono||"").replace(/\s/g,"").includes(q.replace(/\s/g,"")) || (c.email||"").toLowerCase().includes(q) || (c.dni||"").toLowerCase().includes(q)));
   let h = `<div class="phead"><div><h1>Clientes</h1><p>${todos.length} ${todos.length===1?"cliente":"clientes"}</p></div><div class="pactions">
-    <label class="search">${ic("search")}<input id="qsearch" placeholder="Buscar por nombre, móvil o email" value="${esc(ui.q)}" aria-label="Buscar cliente"></label>
-    <button class="btn primary" data-cliente="">${ic("plus")}Nuevo cliente</button></div></div>`;
-  if (!todos.length) return h + `<section class="panel"><div class="empty">${ic("clientes")}Aún no tienes clientes. Añade el primero con su nombre y su móvil.</div></section>` + panelTarifas();
+    <label class="search">${ic("search")}<input id="qsearch" placeholder="Buscar por nombre, móvil, email o DNI" value="${esc(ui.q)}" aria-label="Buscar cliente"></label>
+    ${grupos.length ? `<select id="fgrupo" class="btn" aria-label="Filtrar por grupo" style="padding-right:8px"><option value="">Todos los grupos</option>${grupos.map(g => `<option ${g===ui.grupo?"selected":""}>${esc(g)}</option>`).join("")}</select>` : ""}
+    <button class="btn" data-importar="1">${ic("up")}Importar Excel</button>
+    <button class="btn primary" data-cliente="">${ic("plus")}Nuevo cliente</button></div></div>
+    <input type="file" id="fileClientes" accept=".xlsx,.xls,.csv,.ods" hidden>`;
+  if (!todos.length) return h + `<section class="panel"><div class="empty">${ic("clientes")}Aún no tienes clientes. Añade el primero con su nombre y su móvil, o pulsa <b>Importar Excel</b> para cargarlos todos de una vez.</div></section>` + panelTarifas();
   const rows = l.map(c => { const suyas = ses().filter(s => s.clienteId === c.id);
     const enMes = suyas.filter(s => mkey(s.fecha) === mes && activa(s)).length, debe = suyas.filter(s => cobrable(s) && !s.pagado).length;
     const prox = suyas.filter(s => s.fecha >= todayStr() && activa(s)).sort(byTime)[0];
-    return `<tr><td><div style="display:flex;align-items:center;gap:11px"><div class="avatar">${esc(iniciales(c.nombre))}</div><b>${esc(c.nombre)}</b></div></td><td>${esc(c.telefono)||"–"}</td><td>${tarifaDe(c.id) ? esc(tarifaDe(c.id).nombre) : `<span style="color:var(--muted)">–</span>`}</td><td class="n">${enMes}</td><td>${prox ? `${cap(DABR[parse(prox.fecha).getDay()])} ${parse(prox.fecha).getDate()} · ${prox.hora}` : "–"}</td><td>${debe ? `<span class="pill unpaid">${debe} sin pagar</span>` : `<span class="pill paid">Al día</span>`}</td><td class="n"><button class="btn small" data-cliente="${c.id}">Abrir</button></td></tr>`; }).join("");
+    return `<tr><td><div style="display:flex;align-items:center;gap:11px"><div class="avatar">${esc(iniciales(c.nombre))}</div><div><b>${esc(c.nombre)}</b>${c.grupo || c.email ? `<div style="font-size:12.5px;color:var(--muted)">${[c.grupo, c.email].filter(Boolean).map(esc).join(" · ")}</div>` : ""}</div></div></td><td>${esc(c.telefono)||`<span class="pill unpaid">Falta móvil</span>`}</td><td>${tarifaDe(c.id) ? esc(tarifaDe(c.id).nombre) : `<span style="color:var(--muted)">–</span>`}</td><td class="n">${enMes}</td><td>${prox ? `${cap(DABR[parse(prox.fecha).getDay()])} ${parse(prox.fecha).getDate()} · ${prox.hora}` : "–"}</td><td>${debe ? `<span class="pill unpaid">${debe} sin pagar</span>` : `<span class="pill paid">Al día</span>`}</td><td class="n"><button class="btn small" data-cliente="${c.id}">Abrir</button></td></tr>`; }).join("");
   h += `<section class="panel"><div class="tbl"><table><thead><tr><th>Cliente</th><th>Móvil</th><th>Tarifa</th><th class="n">Sesiones este mes</th><th>Próxima</th><th>Pagos</th><th></th></tr></thead><tbody>${rows || `<tr><td colspan="7" class="empty">Ningún cliente coincide con la búsqueda.</td></tr>`}</tbody></table></div></section>`;
   return h + panelTarifas();
+}
+const normNombre = s => String(s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/\s+/g," ").trim();
+function cargarXLSX(){
+  if (window.XLSX) return Promise.resolve();
+  return new Promise((ok, ko) => { const s = document.createElement("script"); s.src = "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"; s.onload = ok; s.onerror = () => ko(new Error("carga")); document.head.appendChild(s); });
+}
+async function leerExcel(file){
+  await cargarXLSX();
+  const wb = XLSX.read(await file.arrayBuffer(), { type:"array" });
+  const lista = [];
+  wb.SheetNames.forEach(hoja => {
+    const filas = XLSX.utils.sheet_to_json(wb.Sheets[hoja], { header:1, defval:"", raw:false });
+    const hi = filas.findIndex(f => f.some(c => /nombre/i.test(String(c))));
+    if (hi < 0) return;
+    const H = filas[hi].map(c => normNombre(c));
+    const col = re => H.findIndex(c => re.test(c));
+    const iN = col(/nombre/), iD = col(/\b(dni|nif|nie)\b/), iDom = col(/domicilio|direccion/), iT = col(/telefono|movil|tlf|tel\b/), iE = col(/e-?mail|correo/), iO = col(/observ|nota/), iG = col(/grupo|origen|centro/);
+    const grupoHoja = /^(hoja|sheet|clientes)\s*\d*$/i.test(hoja.trim()) ? "" : hoja.trim();
+    filas.slice(hi + 1).forEach(f => {
+      const v = i => i < 0 ? "" : String(f[i] == null ? "" : f[i]).trim();
+      const nombre = v(iN).replace(/\s+/g, " "); if (!nombre) return;
+      let email = v(iE).toLowerCase(); if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) email = "";
+      lista.push({ nombre, dni:v(iD).toUpperCase().replace(/\s/g,""), domicilio:v(iDom), telefono:v(iT).replace(/[^\d+ ]/g,"").trim(), email, nota:v(iO), grupo:v(iG) || grupoHoja });
+    });
+  });
+  const m = new Map();
+  lista.forEach(r => { const k = normNombre(r.nombre), o = m.get(k);
+    if (!o) return m.set(k, r);
+    ["dni","domicilio","telefono","email","grupo"].forEach(f => { if (!o[f] && r[f]) o[f] = r[f]; });
+    if (r.nota && !o.nota.includes(r.nota)) o.nota = [o.nota, r.nota].filter(Boolean).join("; "); });
+  return [...m.values()];
+}
+async function importarClientes(file){
+  toast("Leyendo el archivo…");
+  let lista;
+  try { lista = await leerExcel(file); } catch(e) { return toastLargo("No se ha podido leer el archivo. Usa un Excel (.xlsx) o CSV con una columna «Nombre»."); }
+  if (!lista.length) return toastLargo("No he encontrado clientes. El archivo necesita una columna llamada «Nombre» o «Nombre y Apellidos».");
+  const existentes = new Map(Object.values(S.clientes).map(c => [normNombre(c.nombre), c]));
+  const nuevos = [], completar = [];
+  lista.forEach(r => {
+    const ex = existentes.get(normNombre(r.nombre));
+    if (!ex) return nuevos.push(r);
+    const cambios = {};
+    ["dni","domicilio","telefono","email","grupo"].forEach(f => { if (!ex[f] && r[f]) cambios[f] = r[f]; });
+    if (r.nota && !(ex.nota || "").includes(r.nota)) cambios.nota = [ex.nota, r.nota].filter(Boolean).join("; ");
+    if (Object.keys(cambios).length) completar.push({ ex, cambios });
+  });
+  const iguales = lista.length - nuevos.length - completar.length;
+  const porGrupo = {}; nuevos.forEach(r => { const g = r.grupo || "Sin grupo"; porGrupo[g] = (porGrupo[g] || 0) + 1; });
+  const sinTel = nuevos.filter(r => !r.telefono).length, sinEmail = nuevos.filter(r => !r.email).length;
+  const filas = nuevos.slice(0, 60).map(r => `<tr><td style="white-space:nowrap">${esc(r.nombre)}</td><td>${esc(r.grupo || "–")}</td><td>${r.email ? esc(r.email) : '<span style="color:var(--muted)">–</span>'}</td><td>${r.telefono ? esc(r.telefono) : '<span style="color:var(--muted)">–</span>'}</td></tr>`).join("");
+  const total = nuevos.length + completar.length;
+  openModal("Importar clientes", esc(file.name),
+    `<div class="kpis" style="box-shadow:none;margin-bottom:14px"><div class="kpi"><div class="v">${nuevos.length}</div><div class="l">Nuevos</div></div><div class="kpi"><div class="v">${completar.length}</div><div class="l">Ya existen: se completan datos vacíos</div></div><div class="kpi"><div class="v">${iguales}</div><div class="l">Ya existen sin cambios</div></div><div class="kpi"><div class="v">${Object.keys(porGrupo).length}</div><div class="l">Grupos</div></div></div>
+     ${nuevos.length ? `<p style="margin:0 0 10px;font-size:14px">${Object.entries(porGrupo).map(([g,n]) => `<span class="pill prog" style="margin-bottom:4px">${esc(g)}: ${n}</span>`).join(" ")}</p>` : ""}
+     ${sinTel ? `<div class="mwarn">${ic("bell")}${sinTel} ${sinTel===1?"cliente nuevo no tiene":"clientes nuevos no tienen"} móvil: podrás enviarles email, pero no WhatsApp hasta que lo añadas.</div>` : ""}
+     ${sinEmail ? `<p style="font-size:13px;color:var(--muted);margin:0 0 12px">${sinEmail} sin email.</p>` : ""}
+     ${nuevos.length ? `<div class="tbl" style="border:1px solid var(--line);border-radius:10px;max-height:300px;overflow:auto"><table style="min-width:520px"><thead><tr><th>Nombre</th><th>Grupo</th><th>Email</th><th>Móvil</th></tr></thead><tbody>${filas}</tbody></table></div>${nuevos.length > 60 ? `<p style="font-size:12.5px;color:var(--muted)">…y ${nuevos.length - 60} más.</p>` : ""}` : ""}
+     <p style="font-size:12.5px;color:var(--muted);margin:12px 0 0">Los clientes se reconocen por el nombre: si ya existe, no se duplica y solo se rellenan los datos que le falten. No se borra nada.</p>`,
+    `<span></span><div class="acts"><button class="btn" data-close="1">Cancelar</button><button class="btn primary" id="impOk" ${total ? "" : "disabled"}>${total ? `Importar ${total} ${total===1?"cliente":"clientes"}` : "Nada que importar"}</button></div>`);
+  document.getElementById("impOk").onclick = async () => {
+    const ahora = new Date().toISOString(), por = me.name || null;
+    const objs = [
+      ...nuevos.map(r => ({ id:uid(), nombre:r.nombre, telefono:r.telefono, email:r.email, dni:r.dni, domicilio:r.domicilio, grupo:r.grupo, nota:r.nota, tarifaId:"", modPor:por, modEn:ahora })),
+      ...completar.map(({ ex, cambios }) => ({ ...ex, ...cambios, modPor:por, modEn:ahora }))
+    ];
+    objs.forEach(o => { S.clientes[o.id] = o; });
+    closeModal(); render(); toast("Importando…");
+    try {
+      for (let i = 0; i < objs.length; i += 200) { const { error } = await sb.from("clientes").upsert(objs.slice(i, i+200).map(o => ({ id:o.id, data:o }))); if (error) throw error; }
+      toastLargo(`Listo: ${nuevos.length} ${nuevos.length===1?"cliente nuevo":"clientes nuevos"}${completar.length ? ` y ${completar.length} completados` : ""}.`);
+    } catch(e) { toastLargo("La importación se ha cortado. Vuelve a importar el mismo archivo: no se duplicará nada."); }
+  };
 }
 function panelTarifas(){
   const tiene2026 = S.tarifas.some(t => String(t.id).startsWith("t26-"));
@@ -809,6 +928,10 @@ function modalTarifa(id){
   };
 }
 document.addEventListener("input", e => { if (e.target.id === "qsearch"){ ui.q = e.target.value; render(); } });
+document.addEventListener("change", e => {
+  if (e.target.id === "fgrupo") { ui.grupo = e.target.value; render(); }
+  if (e.target.id === "fileClientes") { const f = e.target.files[0]; e.target.value = ""; if (f) importarClientes(f); }
+});
 
 /* ---------- Vista: Mes ---------- */
 function vMes(){
@@ -853,10 +976,13 @@ function modalSesion(id, preFecha, preHora){
   const estado = { v: s.estado };
   let b = `<div class="f"><label for="mc">Cliente</label><select id="mc"><option value="">Elige un cliente…</option>${clientes.map(c => `<option value="${c.id}" ${c.id===s.clienteId?"selected":""}>${esc(c.nombre)}</option>`).join("")}<option value="__new">+ Cliente nuevo</option></select></div>
     <div id="newcli" hidden><div class="two"><div class="f"><label for="nn">Nombre</label><input id="nn" autocomplete="off"></div><div class="f"><label for="nt">Móvil</label><input id="nt" inputmode="tel" autocomplete="off" placeholder="600 123 456"></div></div></div>
-    <div class="two"><div class="f"><label for="mf">Fecha</label><input id="mf" type="date" value="${s.fecha}"></div><div class="f"><label for="mh">Hora</label><select id="mh">${timeOptions(s.fecha).map(t => `<option ${t===s.hora?"selected":""}>${t}</option>`).join("")}</select></div></div>`;
+    <div class="two"><div class="f"><label for="mf">Fecha</label><input id="mf" type="date" value="${s.fecha}"></div><div class="f"><label for="mh">Hora</label><select id="mh">${timeOptions(s.fecha, durDe(s)).map(t => `<option ${t===s.hora?"selected":""}>${t}</option>`).join("")}</select></div></div>`;
+  const tipoIni = esVal(s) ? "valoracion" : "sesion";
+  b = `<div class="f"><span class="flabel">Tipo</span><div class="seg" id="mtipo"><button type="button" data-v="sesion" aria-pressed="${tipoIni==="sesion"}">Sesión · 45 min</button><button type="button" data-v="valoracion" aria-pressed="${tipoIni==="valoracion"}">Valoración · 60 min · ${eur(precioValoracion())}</button></div></div>` + b;
   const nIni = id ? numEf(s) : (s.clienteId ? sugerirNum(s.clienteId, s.fecha, s.hora) : { num:1, total:null });
-  b += `<div class="numrow"><div class="f"><label for="mnum">Sesión nº</label><input id="mnum" type="number" min="1" inputmode="numeric" value="${nIni.num}"></div><span class="de">de</span><div class="f"><label for="mtot">Total</label><input id="mtot" type="number" min="1" inputmode="numeric" value="${nIni.total || ""}" placeholder="Suelta"></div></div>
-    <p style="font-size:12px;color:var(--muted);margin:-8px 0 14px">Se calcula sola: con tarifa mensual, cuenta las sesiones del mes; con bono, sigue la sesión anterior. Cámbialo solo si hace falta.</p>`;
+  b += `<div id="numbox" ${tipoIni==="valoracion" ? "hidden" : ""}><div class="numrow"><div class="f"><label for="mnum">Sesión nº</label><input id="mnum" type="number" min="1" inputmode="numeric" value="${nIni.num}"></div><span class="de">de</span><div class="f"><label for="mtot">Total</label><input id="mtot" type="number" min="1" inputmode="numeric" value="${nIni.total || ""}" placeholder="Suelta"></div></div>
+    <p style="font-size:12px;color:var(--muted);margin:-8px 0 14px">Se calcula sola: con tarifa mensual, cuenta las sesiones del mes; con bono, sigue la sesión anterior. Cámbialo solo si hace falta.</p></div>
+    <div class="f"><label for="mprecio">Precio (€)</label><input id="mprecio" type="number" min="0" step="0.01" inputmode="decimal" value="${s.precio != null && s.precio !== "" ? s.precio : ""}" placeholder=""><div class="hint" id="mprecioh"></div></div>`;
   if (id) b += `<div class="f"><span class="flabel">Cómo fue</span><div class="seg" id="mseg">${Object.entries(ESTADOS).map(([k,v]) => `<button type="button" data-v="${k}" aria-pressed="${k===s.estado}">${v.t}</button>`).join("")}</div><div class="hint">Canceló a tiempo: sin recargo. No vino y Canceló tarde: con recargo.</div></div>`;
   b += `<label class="check"><input type="checkbox" id="mp" ${s.pagado?"checked":""}> Pagado</label>
     <div class="f"><label for="mn">Nota (opcional)</label><input id="mn" value="${esc(s.nota)}" placeholder="Ej.: paga en efectivo el viernes"><div class="hint">No apuntes aquí datos de salud.</div></div>`;
@@ -873,12 +999,16 @@ function modalSesion(id, preFecha, preHora){
   if (id && s.modEn) b += `<p class="lastmod">Último cambio: ${s.modPor ? esc(s.modPor)+" · " : ""}${new Date(s.modEn).toLocaleString("es-ES",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}</p>`;
   openModal(id ? cli(s.clienteId).nombre : "Nueva sesión", id ? `${cap(fechaLarga(s.fecha))} · ${s.hora}` : "", b, foot);
   const $ = q => document.getElementById(q);
-  let numTocado = false;
+  let numTocado = false; const tipoSel = { v: tipoIni };
+  const precioAuto = () => { const cid = $("mc").value; const tmp = { tipo:tipoSel.v, clienteId: cid && cid !== "__new" ? cid : "" }; const p = precioDe(tmp); $("mprecio").placeholder = /^\d/.test(p) ? p.replace(/\s?€$/, "") : ""; $("mprecioh").textContent = p ? `Por defecto: ${p}. Escribe otro importe solo si cambia.` : "Escribe el precio si quieres que aparezca."; };
+  const horasTipo = () => { const cur = $("mh").value; $("mh").innerHTML = timeOptions($("mf").value, DUR[tipoSel.v]).map(t => `<option ${t===cur?"selected":""}>${t}</option>`).join(""); };
+  $("mtipo").onclick = e => { const x = e.target.closest("button"); if (!x) return; tipoSel.v = x.dataset.v; [...$("mtipo").children].forEach(y => y.setAttribute("aria-pressed", y === x)); $("numbox").hidden = tipoSel.v === "valoracion"; horasTipo(); precioAuto(); };
+  $("mc").addEventListener("change", precioAuto); precioAuto();
   $("mnum").oninput = $("mtot").oninput = () => { numTocado = true; };
   const resugerir = () => { if (numTocado || id) return; const c = $("mc").value; const g = (c && c !== "__new") ? sugerirNum(c, $("mf").value, $("mh").value, id) : { num:1, total:null }; $("mnum").value = g.num; $("mtot").value = g.total || ""; };
   $("mc").onchange = () => { $("newcli").hidden = $("mc").value !== "__new"; if (!$("newcli").hidden) $("nn").focus(); resugerir(); };
   $("mh").addEventListener("change", resugerir);
-  $("mf").onchange = () => { setTimeout(resugerir); const cur = $("mh").value; $("mh").innerHTML = timeOptions($("mf").value).map(t => `<option ${t===cur?"selected":""}>${t}</option>`).join(""); };
+  $("mf").onchange = () => { setTimeout(resugerir); const cur = $("mh").value; $("mh").innerHTML = timeOptions($("mf").value, DUR[tipoSel.v]).map(t => `<option ${t===cur?"selected":""}>${t}</option>`).join(""); };
   if ($("mseg")) $("mseg").onclick = e => { const x = e.target.closest("button"); if (!x) return; estado.v = x.dataset.v; [...$("mseg").children].forEach(y => y.setAttribute("aria-pressed", y === x)); };
   if (id){
     const tel = cli(s.clienteId).telefono;
@@ -897,14 +1027,16 @@ function modalSesion(id, preFecha, preHora){
     const fecha = $("mf").value; if (!fecha) return toast("Elige una fecha");
     if (parse(fecha).getDay() === 0) return toast("Los domingos no trabajas. Elige otro día.");
     const hora = $("mh").value;
-    const choque = delDia(fecha).find(x => x.id !== id && activa(x) && Math.abs(toMin(x.hora) - toMin(hora)) < DURACION);
+    const a1 = toMin(hora), b1 = a1 + DUR[tipoSel.v];
+    if (b1 > endMin(fecha)) return toast(`A esa hora no cabe: termina a las ${fromMin(b1)} y cierras a las ${fromMin(endMin(fecha))}.`);
+    const choque = delDia(fecha).find(x => x.id !== id && activa(x) && toMin(x.hora) < b1 && a1 < toMin(x.hora) + durDe(x));
     if (choque && !confirm(`Se solapa con la sesión de ${cli(choque.clienteId).nombre} a las ${choque.hora}. ¿Guardar igualmente?`)) return;
     let num = parseInt($("mnum").value, 10), total = $("mtot").value ? parseInt($("mtot").value, 10) : null;
     if (!num || num < 1) return toast("Pon el número de sesión");
     if (total && num > total) return toast("El número de sesión no puede ser mayor que el total");
     if (!numTocado) { num = id ? (S.sesiones[id].num || null) : null; total = id ? (S.sesiones[id].total || null) : null; }
     const cambio = id && (S.sesiones[id].fecha !== fecha || S.sesiones[id].hora !== hora);
-    const obj = { ...(id ? S.sesiones[id] : { id:uid(), reservaEnviada:false, recordatorioEnviado:false }), clienteId, fecha, hora, num, total, estado: id ? estado.v : "programada", pagado:$("mp").checked, nota:$("mn").value.trim() };
+    const obj = { ...(id ? S.sesiones[id] : { id:uid(), reservaEnviada:false, recordatorioEnviado:false }), clienteId, fecha, hora, tipo:tipoSel.v, precio: $("mprecio").value === "" ? null : parseFloat(String($("mprecio").value).replace(",", ".")), num: tipoSel.v === "valoracion" ? null : num, total: tipoSel.v === "valoracion" ? null : total, estado: id ? estado.v : "programada", pagado:$("mp").checked, nota:$("mn").value.trim() };
     if (cambio) { obj.reservaEnviada = false; obj.recordatorioEnviado = false; }
     put("sesiones", obj); ui.week = mondayOf(parse(fecha)); ui.day = fecha;
     if (!id || cambio) modalEnviar(obj.id); else closeModal();
@@ -928,14 +1060,18 @@ function modalEnviar(id){
 }
 
 function modalCliente(id){
-  const c = id ? S.clientes[id] : { nombre:"", telefono:"", email:"", tarifaId:"", nota:"" }, mes = todayStr().slice(0,7);
+  const c = id ? S.clientes[id] : { nombre:"", telefono:"", email:"", tarifaId:"", nota:"", grupo:"", dni:"", domicilio:"" }, mes = todayStr().slice(0,7);
+  const gruposExist = [...new Set(Object.values(S.clientes).map(x => x.grupo).filter(Boolean))].sort();
   const suyas = id ? ses().filter(s => s.clienteId === id).sort(byTime) : [];
   const delMes = suyas.filter(s => mkey(s.fecha) === mes), proximas = suyas.filter(s => s.fecha >= todayStr() && activa(s));
   let b = `<div class="f"><label for="cn">Nombre</label><input id="cn" value="${esc(c.nombre)}"></div>
     <div class="two"><div class="f"><label for="ct">Móvil</label><input id="ct" inputmode="tel" value="${esc(c.telefono)}" placeholder="600 123 456"><div class="hint">Sin prefijo se entiende +34.</div></div>
     <div class="f"><label for="cem">Email</label><input id="cem" type="email" inputmode="email" autocomplete="off" value="${esc(c.email || "")}" placeholder="nombre@correo.com"></div></div>
     <div class="two"><div class="f"><label for="cta">Tarifa</label><select id="cta"><option value="">Sin tarifa</option>${["sesion","mes","bono"].map(tp => { const l = S.tarifas.filter(t => tipoDe(t) === tp); return l.length ? `<optgroup label="${TIPOS[tp]}">${l.map(t => `<option value="${t.id}" ${t.id===c.tarifaId?"selected":""}>${esc(t.nombre)} · ${eur(t.precio)}${tp==="mes"?"/mes":""}</option>`).join("")}</optgroup>` : ""; }).join("")}</select><div class="hint">Aparece en la reserva. Las tarifas se editan en Clientes.</div></div>
-    <div class="f"><label for="cno">Nota (opcional)</label><input id="cno" value="${esc(c.nota)}" placeholder="Ej.: prefiere tardes"><div class="hint">Sin datos de salud.</div></div></div>`;
+    <div class="f"><label for="cno">Nota (opcional)</label><input id="cno" value="${esc(c.nota)}" placeholder="Ej.: prefiere tardes"><div class="hint">Sin datos de salud.</div></div></div>
+    <div class="two"><div class="f"><label for="cgr">Grupo</label><input id="cgr" list="lgr" value="${esc(c.grupo || "")}" placeholder="Ej.: DCF, FDB, Online"><datalist id="lgr">${gruposExist.map(g => `<option value="${esc(g)}">`).join("")}</datalist></div>
+    <div class="f"><label for="cdni">DNI / NIE</label><input id="cdni" value="${esc(c.dni || "")}" autocomplete="off" placeholder="Para facturas"></div></div>
+    <div class="f"><label for="cdom">Domicilio</label><input id="cdom" value="${esc(c.domicilio || "")}" autocomplete="off" placeholder="Para facturas"></div>`;
   if (id){
     b += `<div class="f"><span class="flabel">Sesiones de ${MESES[Number(mes.slice(5))-1]}</span><div class="hist">${delMes.length ? delMes.map(s => `<div class="item"><div class="time">${s.hora}<small>${DABR[parse(s.fecha).getDay()]} ${parse(s.fecha).getDate()}</small></div><div class="who"><b style="font-weight:600;font-size:13.5px">Sesión ${etiquetaNum(s)}</b><span>${pills(s)||'<span class="pill prog">Programada</span>'}</span></div></div>`).join("") : `<p style="color:var(--muted);font-size:14px;margin:4px 0">Sin sesiones este mes.</p>`}</div></div>`;
     b += `<div class="acts" style="justify-content:flex-start"><button class="btn wa" id="cplan" ${proximas.length?"":"disabled"}>${ic("wa")}Sesiones de la semana</button>${c.email ? `<button class="btn" id="cplanm" ${proximas.length?"":"disabled"}>${ic("mail")}Por email</button>` : ""}</div>`;
@@ -944,7 +1080,7 @@ function modalCliente(id){
   openModal(id ? c.nombre : "Nuevo cliente", id ? `${suyas.filter(activa).length} sesiones registradas` : "", b, foot);
   const $ = q => document.getElementById(q);
   $("csave").onclick = () => { const nombre = $("cn").value.trim(); if (!nombre) return toast("Escribe el nombre"); const email = $("cem").value.trim(); if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return toast("Revisa el email");
-    put("clientes", { ...(id ? S.clientes[id] : { id:uid() }), nombre, telefono:$("ct").value.trim(), email, tarifaId:$("cta").value, nota:$("cno").value.trim() }); closeModal(); };
+    put("clientes", { ...(id ? S.clientes[id] : { id:uid() }), nombre, telefono:$("ct").value.trim(), email, tarifaId:$("cta").value, nota:$("cno").value.trim(), grupo:$("cgr").value.trim(), dni:$("cdni").value.trim().toUpperCase(), domicilio:$("cdom").value.trim() }); closeModal(); };
   if (id){
     $("cdel").onclick = () => { if (suyas.length) return toast("Tiene sesiones registradas. Elimínalas antes o deja el cliente."); if (confirm("¿Eliminar este cliente?")) { remove("clientes", id); closeModal(); } };
     $("cplan").onclick = () => { const t = msgSemana(id, mondayOf(parse(proximas[0].fecha))); if (t) enviar(c.telefono, t); };
@@ -979,6 +1115,7 @@ document.getElementById("main").addEventListener("click", e => {
   if (d.mail) { const s = S.sesiones[d.id], rec = d.mail === "rec"; return enviarEmail(s.clienteId, rec ? emailRecordatorio(s) : emailReserva(s), () => patch("sesiones", s.id, rec ? {recordatorioEnviado:true} : {reservaEnviada:true})); }
   if (d.tarifa !== undefined) return modalTarifa(d.tarifa || null);
   if (d.cargar2026) return cargarTarifas2026();
+  if (d.importar) return document.getElementById("fileClientes").click();
   if (d.copy) { const s = S.sesiones[d.id], rec = d.copy === "rec"; copiar(rec ? msgRecordatorio(s) : msgReserva(s)); return patch("sesiones", s.id, rec ? {recordatorioEnviado:true} : {reservaEnviada:true}); }
   if (d.pagar) { const l = ses().filter(s => s.clienteId === d.pagar && cobrable(s) && !s.pagado && (!d.mes || mkey(s.fecha) === d.mes)); l.forEach(s => patch("sesiones", s.id, {pagado:true})); return toast(`${l.length} ${l.length===1?"sesión marcada":"sesiones marcadas"} como pagadas`); }
   if (d.week !== undefined) { const n = Number(d.week); ui.week = n === 0 ? mondayOf(new Date()) : addDays(ui.week, 7*n); if (n === 0 && parse(todayStr()).getDay() === 0) ui.week = addDays(ui.week,7); ui.day = n === 0 && parse(todayStr()).getDay() !== 0 ? todayStr() : ymd(ui.week); return render(); }
@@ -1012,7 +1149,7 @@ async function exportar(mk){
   const l = ses().filter(s => mkey(s.fecha) === mk).sort(byTime);
   if (!l.length) return toast("No hay sesiones en este mes");
   const q = v => `"${String(v).replace(/"/g,'""')}"`;
-  const filas = [["Fecha","Hora","Cliente","Tarifa","Sesión","Estado","Se cobra","Pagado","Nota"].join(";")].concat(l.map(s => [s.fecha.split("-").reverse().join("/"), s.hora, q(cli(s.clienteId).nombre), q(tarifaDe(s.clienteId) ? tarifaDe(s.clienteId).nombre : ""), etiquetaNum(s), ESTADOS[s.estado].t, cobrable(s)?"Sí":"No", s.pagado?"Sí":"No", q(s.nota||"")].join(";")));
+  const filas = [["Fecha","Hora","Tipo","Cliente","Tarifa","Sesión","Precio","Estado","Se cobra","Pagado","Nota"].join(";")].concat(l.map(s => [s.fecha.split("-").reverse().join("/"), s.hora, esVal(s) ? "Valoración" : "Sesión", q(cli(s.clienteId).nombre), q(tarifaDe(s.clienteId) ? tarifaDe(s.clienteId).nombre : ""), etiquetaNum(s), q(precioDe(s)), ESTADOS[s.estado].t, cobrable(s)?"Sí":"No", s.pagado?"Sí":"No", q(s.nota||"")].join(";")));
   await descargar(`sesiones-${mk}.csv`, "\uFEFF"+filas.join("\r\n"), "text/csv");
 }
 

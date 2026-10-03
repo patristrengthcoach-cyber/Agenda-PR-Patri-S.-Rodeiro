@@ -1,0 +1,1347 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Agenda · Patri S. Rodeiro</title>
+<meta name="theme-color" content="#14213D">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="favicon.png" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F3F4F7;--surface:#FFFFFF;--surface-2:#F7F8FA;--ink:#14213D;--ink-2:#3A4760;--muted:#687288;--line:#E0E3EA;--line-2:#ECEEF3;
+  --navy:#14213D;--accent:#F5B700;--accent-ink:#14213D;--accent-soft:#FEF4D4;--focus:#14213D;
+  --blue-soft:#E6EBF4;--blue:#3A5A8C;
+  --amber:#B4540A;--amber-soft:#FCEBDD;--red:#B03A33;--red-soft:#FBE7E5;--green:#1F7A4A;--green-soft:#E2F3E9;--wa:#1E8E4E;
+  --shadow:0 1px 2px rgba(20,33,61,.06),0 8px 24px rgba(20,33,61,.06);
+  --font:"Archivo",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0B1222;--surface:#131D33;--surface-2:#0F1829;--ink:#E8ECF4;--ink-2:#C3CAD8;--muted:#8E98AD;--line:#243150;--line-2:#1B2641;
+  --navy:#14213D;--accent:#F5B700;--accent-ink:#14213D;--accent-soft:#3A3010;--focus:#F5B700;
+  --blue-soft:#1A2745;--blue:#9DB3DA;
+  --amber:#F0A060;--amber-soft:#3B2414;--red:#EE8A80;--red-soft:#3C1E1B;--green:#6FCB94;--green-soft:#173524;--wa:#3DBB6F;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.25);
+}}
+:root[data-theme="dark"]{
+  --bg:#0B1222;--surface:#131D33;--surface-2:#0F1829;--ink:#E8ECF4;--ink-2:#C3CAD8;--muted:#8E98AD;--line:#243150;--line-2:#1B2641;
+  --navy:#14213D;--accent:#F5B700;--accent-ink:#14213D;--accent-soft:#3A3010;--focus:#F5B700;
+  --blue-soft:#1A2745;--blue:#9DB3DA;
+  --amber:#F0A060;--amber-soft:#3B2414;--red:#EE8A80;--red-soft:#3C1E1B;--green:#6FCB94;--green-soft:#173524;--wa:#3DBB6F;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.25);
+}
+*,*::before,*::after{box-sizing:inherit}
+[hidden]{display:none !important}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 var(--font);-webkit-font-smoothing:antialiased;font-feature-settings:"tnum" 1}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+svg.i{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+
+/* Shell */
+.app{display:flex;min-height:100vh}
+.side{display:none}
+.content{flex:1;min-width:0}
+.mtop{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px 10px 10px;background:var(--navy);color:#fff}
+.mtop img{height:44px;width:auto;display:block}
+.eyebrow{font-size:11.5px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+main{max-width:1180px;margin:0 auto;padding:22px 18px 110px}
+.phead{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:18px}
+.phead h1{margin:0;font-size:26px;font-weight:800;letter-spacing:-.02em;line-height:1.15}
+.phead p{margin:6px 0 0;font-size:11.5px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+.pactions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px);z-index:20;display:grid;grid-template-columns:repeat(6,1fr)}
+@media (max-width:420px){nav.tabs button{font-size:10.5px}nav.tabs button svg.i{width:19px;height:19px}}
+nav.tabs button{background:none;border:0;padding:9px 4px 10px;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:12px;font-weight:600;color:var(--muted)}
+nav.tabs button svg.i{width:21px;height:21px}
+nav.tabs button{position:relative}
+nav.tabs button[aria-current="page"]{color:var(--ink)}
+nav.tabs button[aria-current="page"] svg.i{filter:drop-shadow(0 3px 0 var(--accent))}
+@media (min-width:960px){
+  .side{display:flex;flex-direction:column;width:260px;flex-shrink:0;background:var(--navy);color:#fff;padding:22px 14px;position:sticky;top:0;height:100vh}
+  .side .brandbox{padding:0 0 18px;border-bottom:1px solid rgba(255,255,255,.12);margin:0 0 14px}
+  .side .brandbox img{width:100%;height:auto;display:block}
+  .side nav button{display:flex;align-items:center;gap:11px;width:100%;background:none;border:0;color:rgba(255,255,255,.72);padding:10px 12px;border-radius:9px;font-weight:600;font-size:14.5px;text-align:left;margin-bottom:2px}
+  .side nav button:hover{background:rgba(255,255,255,.07);color:#fff}
+  .side nav button{position:relative}
+  .side nav button[aria-current="page"]{background:rgba(255,255,255,.1);color:#fff}
+  .side nav button[aria-current="page"]::before{content:"";position:absolute;left:0;top:9px;bottom:9px;width:3px;border-radius:2px;background:var(--accent)}
+  .side .foot{margin-top:auto;font-size:12.5px;color:rgba(255,255,255,.6);padding:0 8px;display:flex;align-items:center;gap:7px}
+  .mtop,nav.tabs{display:none}
+  main{padding:30px 32px 40px}
+}
+.logout{background:none;border:1px solid rgba(255,255,255,.25);color:rgba(255,255,255,.85);border-radius:8px;padding:5px 10px;font-size:12.5px;font-weight:600;margin-top:10px}
+.logout:hover{background:rgba(255,255,255,.08)}
+.login{min-height:100vh;display:grid;place-items:center;padding:24px;background:var(--navy)}
+.login .box{background:var(--surface);border-radius:18px;padding:28px 26px;width:100%;max-width:380px;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+.login .box .head{background:var(--navy);border-radius:12px;padding:14px 12px;margin-bottom:22px}
+.login .box .head img{width:100%;height:auto;display:block}
+.login .box .bname small{color:var(--muted);opacity:1}
+.login .err{color:var(--red);font-size:13.5px;font-weight:600;min-height:20px;margin:-4px 0 10px}
+.login .lnk{background:none;border:0;color:var(--ink);text-decoration:underline;text-decoration-color:var(--accent);text-decoration-thickness:2px;text-underline-offset:3px;font-weight:600;font-size:13.5px;padding:10px 0 0}
+.badge{position:absolute;top:4px;right:calc(50% - 22px);min-width:18px;height:18px;border-radius:9px;background:var(--accent);color:var(--accent-ink);font-size:11px;font-weight:800;display:grid;place-items:center;padding:0 5px}
+.side nav .badge{position:static;margin-left:auto}
+.vwrap{display:none}
+.modo-val .vwrap{display:block;height:calc(100vh - 64px - 62px - env(safe-area-inset-bottom,0px));height:calc(100dvh - 64px - 62px - env(safe-area-inset-bottom,0px))}
+.modo-val main{display:none}
+.vwrap iframe{display:block;width:100%;height:100%;border:0;background:var(--bg)}
+@media (min-width:960px){.modo-val .vwrap{height:100vh;height:100dvh}}
+.quien{color:#fff;font-weight:700;font-size:13px;margin-bottom:4px}
+.dot{width:8px;height:8px;border-radius:50%;background:#4ADE80;display:inline-block}
+.dot.off{background:var(--amber)}
+
+/* Panels */
+.grid2{display:grid;gap:16px}
+@media (min-width:960px){.grid2{grid-template-columns:1fr 1fr}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden;margin-bottom:16px}
+.grid2 .panel{margin-bottom:0}
+.ph{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 18px;border-bottom:1px solid var(--line-2)}
+.ph h2{margin:0;font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px}
+.ph .hint{font-size:12.5px;color:var(--muted)}
+.count{font-size:12px;font-weight:700;background:var(--surface-2);border:1px solid var(--line);color:var(--ink-2);border-radius:20px;padding:1px 8px}
+.count.hot{background:var(--amber-soft);border-color:transparent;color:var(--amber)}
+.pb{padding:6px 0}
+.pbpad{padding:16px 18px}
+.empty{color:var(--muted);font-size:14px;padding:18px;display:flex;align-items:center;gap:10px}
+.empty svg.i{color:var(--green)}
+
+/* KPIs */
+.kpis{display:grid;grid-template-columns:repeat(2,1fr);background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);margin-bottom:16px;overflow:hidden}
+@media (min-width:700px){.kpis{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}}
+.kpi.link{cursor:pointer}.kpi.link:hover{background:var(--surface-2)}
+.kpi{padding:16px 18px;border-right:1px solid var(--line-2);border-bottom:1px solid var(--line-2)}
+.kpi .v{font-size:28px;font-weight:800;letter-spacing:-.02em;line-height:1.1}
+.kpi .v small{font-size:15px;font-weight:600;color:var(--muted)}
+.kpi .l{font-size:13px;color:var(--muted);margin-top:2px}
+.kpi .bar{height:5px;border-radius:3px;background:var(--line-2);margin-top:9px;overflow:hidden}
+.kpi .bar i{display:block;height:100%;background:var(--accent);border-radius:3px}
+
+/* Rows */
+.item{display:flex;align-items:center;gap:14px;padding:10px 18px;border-bottom:1px solid var(--line-2)}
+.item:last-child{border-bottom:0}
+.item .time{font-weight:800;font-size:15px;width:48px;flex-shrink:0}
+.item .time small{display:block;font-weight:500;font-size:11.5px;color:var(--muted)}
+.item .who{flex:1;min-width:0}
+.item .who b{display:block;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item .who span{font-size:13px;color:var(--muted)}
+.avatar{width:34px;height:34px;border-radius:50%;background:var(--blue-soft);color:var(--blue);display:grid;place-items:center;font-weight:700;font-size:13px;flex-shrink:0}
+.acts{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+@media (max-width:640px){.item.wrap{flex-wrap:wrap}.item.wrap .acts{width:100%;justify-content:flex-start;padding-left:62px}}
+
+.btn{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--surface);border-radius:9px;padding:8px 13px;font-size:14px;font-weight:600;white-space:nowrap;color:var(--ink)}
+.btn:hover{background:var(--surface-2)}
+.btn svg.i{width:16px;height:16px}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.primary:hover{filter:brightness(.96)}
+.btn.wa{background:var(--wa);border-color:var(--wa);color:#fff}
+.btn.danger{color:var(--red);border-color:transparent;background:none}
+.btn.ghost{border-color:transparent;background:none}
+.btn.small{padding:5px 10px;font-size:13px;border-radius:8px}
+.btn.icon{padding:7px 9px}
+.btn:disabled{opacity:.45;cursor:default}
+.pill{display:inline-flex;align-items:center;font-size:12px;font-weight:700;border-radius:20px;padding:2px 9px;margin-right:4px;white-space:nowrap}
+.pill.prog{background:var(--blue-soft);color:var(--blue)}
+.pill.hecha{background:var(--green-soft);color:var(--green)}
+.pill.red{background:var(--red-soft);color:var(--red)}
+.pill.off{background:var(--surface-2);color:var(--muted);border:1px solid var(--line)}
+.pill.paid{background:transparent;color:var(--green);border:1px solid currentColor}
+.pill.unpaid{background:var(--amber-soft);color:var(--amber)}
+.avisos{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:var(--navy);color:#fff;border-radius:12px;padding:12px 16px;font-size:14px;font-weight:600;margin-bottom:16px;border-left:4px solid var(--accent)}
+.avisos svg.i{color:var(--accent)}
+.avisos .btn{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.mwarn{display:flex;align-items:center;gap:8px;background:var(--amber-soft);color:var(--amber);border-radius:9px;padding:9px 12px;font-size:13.5px;font-weight:600;margin-bottom:12px}
+.numrow{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:end}
+.numrow .de{padding-bottom:22px;color:var(--muted);font-weight:600}
+.alert{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:var(--amber-soft);color:var(--amber);border-radius:12px;padding:12px 16px;font-size:14px;font-weight:600;margin-bottom:16px}
+
+/* Week: calendario */
+.cal-wrap{overflow-x:auto}
+.tg{display:grid;position:relative}
+.wk-desk .tg{min-width:780px}
+.tgh{padding:12px 10px 10px;border-bottom:1px solid var(--line);border-left:1px solid var(--line-2);grid-row:1}
+.tgh.corner{grid-column:1;border-left:0}
+.tgh b{display:block;font-size:12.5px;font-weight:700;color:var(--muted);text-transform:capitalize}
+.tgh span{font-size:20px;font-weight:800}
+.tgh em{font-style:normal;font-size:12px;color:var(--muted);margin-left:6px}
+.tgh.today span{text-decoration:underline;text-decoration-color:var(--accent);text-decoration-thickness:3px;text-underline-offset:4px}
+.tgh .w{display:block;font-size:11.5px;color:var(--amber);font-weight:700;margin-left:0}
+.tgl{grid-column:1;font-size:11.5px;font-weight:700;color:var(--muted);text-align:right;padding:2px 9px 0 0;border-top:1px solid var(--line)}
+.q{border:0;border-left:1px solid var(--line-2);background:transparent;padding:0 0 0 8px;margin:0;text-align:left;font-size:11.5px;font-weight:700;color:transparent;display:flex;align-items:center;min-width:0}
+.q.hr{border-top:1px solid var(--line)}
+.q.half{border-top:1px dashed var(--line-2)}
+.q.today{background:color-mix(in srgb,var(--accent-soft) 40%,transparent)}
+button.q:hover,button.q:focus-visible{background:var(--accent-soft);color:var(--ink);outline-offset:-2px}
+.closed{border-left:1px solid var(--line-2);border-top:1px solid var(--line);background:repeating-linear-gradient(135deg,var(--surface-2) 0 6px,transparent 6px 12px);display:flex;justify-content:center;padding-top:12px;font-size:12px;font-weight:600;color:var(--muted)}
+.chip{z-index:2;margin:2px 4px 2px 5px;border:0;text-align:left;border-radius:8px;padding:5px 8px 5px 11px;background:var(--blue-soft);color:var(--ink);position:relative;font-size:12.5px;line-height:1.3;min-width:0;overflow:hidden;box-shadow:0 1px 2px rgba(15,34,48,.08)}
+.chip::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--blue)}
+.chip b{display:block;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chip small{color:var(--muted);font-size:11.5px;display:flex;gap:5px;align-items:center;white-space:nowrap}
+.chip:hover{filter:brightness(.97)}
+.chip.hecha{background:var(--green-soft)}.chip.hecha::before{background:var(--green)}
+.chip.noshow,.chip.tarde{background:var(--red-soft)}.chip.noshow::before,.chip.tarde::before{background:var(--red)}
+.chip.val.programada{background:var(--accent-soft)}
+.chip.val.programada::before{background:var(--accent)}
+.chip.unsent{outline:1.5px dashed var(--amber);outline-offset:-1.5px}
+.chip.cancelada{justify-self:end;width:40px;background:var(--surface-2);border:1px dashed var(--line);box-shadow:none;padding:5px;text-align:center;color:var(--muted)}
+.chip.cancelada::before{display:none}
+.chip.cancelada b{text-decoration:line-through;font-size:11px}
+.mini{width:7px;height:7px;border-radius:50%;display:inline-block;flex-shrink:0}
+.mini.unpaid{background:var(--amber)}.mini.paid{background:var(--green)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);padding:12px 18px;border-top:1px solid var(--line-2)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:12px;height:12px;border-radius:3px;display:inline-block}
+.sw.unsent-sw{border:1.5px dashed var(--amber)}
+
+/* Week: mobile day view */
+.wk-desk{display:none}
+@media (min-width:960px){.wk-desk{display:block}.wk-mob{display:none}}
+.days{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-bottom:14px}
+.days button{background:var(--surface);border:1px solid var(--line);border-radius:11px;padding:8px 2px;text-align:center}
+.days button b{display:block;font-size:11.5px;font-weight:700;color:var(--muted)}
+.days button span{display:block;font-size:19px;font-weight:800;line-height:1.2}
+.days button em{font-style:normal;font-size:11px;color:var(--muted)}
+.days button[aria-pressed="true"]{background:var(--navy);border-color:var(--navy);color:#fff;box-shadow:inset 0 -3px 0 var(--accent)}
+.days button[aria-pressed="true"] b,.days button[aria-pressed="true"] em{color:rgba(255,255,255,.75)}
+.wknav{display:flex;align-items:center;gap:6px}
+.wknav .lbl{font-weight:700;font-size:15px;min-width:150px;text-align:center}
+
+/* Table */
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px;min-width:620px}
+th,td{padding:11px 14px;text-align:left;border-bottom:1px solid var(--line-2)}
+th{font-weight:700;color:var(--muted);font-size:12.5px;background:var(--surface-2)}
+th:first-child,td:first-child{padding-left:18px}
+td.n,th.n{text-align:right}
+tr:last-child td{border-bottom:0}
+.search{position:relative;flex:1;min-width:200px;max-width:320px}
+.search input{width:100%;border:1px solid var(--line);border-radius:9px;padding:8px 12px 8px 36px;background:var(--surface)}
+.search svg.i{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--muted)}
+
+/* Modal */
+.back{position:fixed;inset:0;background:rgba(8,20,28,.55);display:flex;align-items:flex-end;justify-content:center;z-index:50}
+.sheet{background:var(--surface);width:100%;max-width:560px;max-height:92vh;overflow:auto;border-radius:18px 18px 0 0;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+@media (min-width:700px){.back{align-items:center;padding:20px}.sheet{border-radius:18px}}
+.sh{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:18px 22px 12px}
+.sh h3{margin:0;font-size:20px;font-weight:800;letter-spacing:-.01em}
+.sh p{margin:2px 0 0;font-size:13px;color:var(--muted)}
+.sbody{padding:4px 22px 10px}
+.sfoot{display:flex;gap:8px;flex-wrap:wrap;justify-content:space-between;align-items:center;padding:14px 22px calc(16px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line-2);background:var(--surface-2)}
+.f{margin-bottom:14px}
+.f label,.flabel{display:block;font-size:12.5px;font-weight:700;color:var(--ink-2);margin-bottom:5px}
+.f input,.f select{width:100%;border:1px solid var(--line);border-radius:9px;padding:10px 12px;background:var(--surface)}
+.f input:focus,.f select:focus{border-color:var(--focus);outline:none;box-shadow:0 0 0 3px var(--accent-soft)}
+.f .hint{font-size:12px;color:var(--muted);margin-top:5px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{border:1px solid var(--line);background:var(--surface);border-radius:9px;padding:7px 12px;font-size:13.5px;font-weight:600}
+.seg button[aria-pressed="true"]{background:var(--navy);color:#fff;border-color:var(--navy)}
+.check{display:flex;align-items:center;gap:10px;font-weight:600;padding:10px 12px;border:1px solid var(--line);border-radius:9px;margin-bottom:14px}
+.check input{width:20px;height:20px;accent-color:var(--green)}
+.msgbox{background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:14px;font-size:14px;white-space:pre-wrap;margin-bottom:12px}
+.msgs{display:grid;grid-template-columns:1fr;gap:8px}
+@media (min-width:520px){.msgs{grid-template-columns:1fr 1fr}}
+.msgs .card{border:1px solid var(--line);border-radius:11px;padding:10px 12px}
+.msgs .card b{display:block;font-size:13px;margin-bottom:7px}
+.msgs .card .acts{justify-content:flex-start}
+.hist .item{padding:8px 0}
+.lastmod{font-size:12.5px;color:var(--muted);margin:4px 0 6px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:11px 18px;border-radius:11px;font-size:14px;font-weight:600;z-index:60;max-width:90vw;box-shadow:var(--shadow)}
+@media (min-width:960px){.toast{bottom:28px}}
+@media (prefers-reduced-motion:no-preference){.sheet{animation:up .2s ease-out}@keyframes up{from{transform:translateY(16px);opacity:0}}}
+</style>
+</head>
+<body>
+<div id="login" class="login" hidden></div>
+<div class="app" id="app" hidden>
+  <aside class="side">
+    <div class="brandbox"><img src="logo.png" alt="Patri S. Rodeiro · Readaptación y rendimiento" width="900" height="225"></div>
+    <nav id="sidenav" aria-label="Secciones"></nav>
+    <div class="foot"><div><div id="quien" class="quien" hidden></div><div style="display:flex;align-items:center;gap:7px"><span class="dot" id="syncdot"></span><span id="sync">Cargando…</span></div><button class="logout" data-logout="1">Cerrar sesión</button></div></div>
+  </aside>
+  <div class="content">
+    <div class="mtop"><img src="logo.png" alt="Patri S. Rodeiro · Readaptación y rendimiento" width="900" height="225"><button class="logout" data-logout="1" style="margin-top:0">Salir</button></div>
+    <main id="main"></main>
+    <div class="vwrap" id="vwrap"></div>
+  </div>
+</div>
+<nav class="tabs" id="tabs" aria-label="Secciones"></nav>
+<div id="modal"></div>
+<input type="file" id="fileRestore" accept=".json,application/json" hidden>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
+<script src="config.js"></script>
+<script src="plantilla-email.js"></script>
+<script>
+/* ---------- Iconos ---------- */
+const IC = {
+  hoy:'<path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
+  semana:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+  clientes:'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-5.5 6.5-5.5s6.5 1.9 6.5 5.5"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M21.5 20c0-2.6-1.4-4.4-3.5-5.1"/>',
+  valoraciones:'<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M9 11l2 2 4-4M9 17h6"/>',
+  espera:'<circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9.5 2.5h5"/>',
+  phone:'<path d="M5 4h3l2 5-2.5 1.5a11 11 0 0 0 6 6L15 14l5 2v3a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/>',
+  mes:'<path d="M4 20V11M10 20V5M16 20v-6M21 20H3"/>',
+  wa:'<path d="M20.5 12a8.5 8.5 0 0 1-12.6 7.4L3.5 20.5l1.1-4.2A8.5 8.5 0 1 1 20.5 12z"/>',
+  copy:'<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h8"/>',
+  plus:'<path d="M12 5v14M5 12h14"/>', x:'<path d="M6 6l12 12M18 6 6 18"/>',
+  left:'<path d="m15 6-6 6 6 6"/>', right:'<path d="m9 6 6 6-6 6"/>',
+  check:'<path d="m5 12.5 4.5 4.5L19 7.5"/>', down:'<path d="M12 4v11M7 10l5 5 5-5M4 20h16"/>',
+  up:'<path d="M12 16V5M7 10l5-5 5 5M4 20h16"/>', repeat:'<path d="M17 2l3 3-3 3"/><path d="M4 11V9a4 4 0 0 1 4-4h12M7 22l-3-3 3-3"/><path d="M20 13v2a4 4 0 0 1-4 4H4"/>',
+  bell:'<path d="M6 8a6 6 0 1 1 12 0c0 7 3 8 3 8H3s3-1 3-8"/><path d="M10.3 20a1.9 1.9 0 0 0 3.4 0"/>',
+  mail:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3.5 7 8.5 6 8.5-6"/>',
+  send:'<path d="M21 3 10 14M21 3l-7 18-4-7-7-4z"/>', search:'<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>'
+};
+const ic = k => `<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${IC[k]}</svg>`;
+
+/* ---------- Constantes ---------- */
+const CAPACIDAD = 20, DURACION = 45, MAX_SEGUIDAS = 4;
+const LUGAR = "Clínica DCF · Mugardos", FIRMA = "Patri S. Rodeiro · Readaptación y rendimiento";
+// Texto de la política de cancelación (se usa en WhatsApp y email)
+const CANCELACION = "Si no avisas o no vienes, se aplicará un recargo.";
+const EMAIL_API = (window.CONFIG && CONFIG.EMAIL_API) || "";
+const DIAS = ["domingo","lunes","martes","miércoles","jueves","viernes","sábado"];
+const DABR = ["dom","lun","mar","mié","jue","vie","sáb"];
+const MESES = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+const ESTADOS = {
+  programada:{t:"Programada", cobra:false, pill:"prog"},
+  hecha:{t:"Hecha", cobra:true, pill:"hecha"},
+  cancelada:{t:"Canceló a tiempo", cobra:false, pill:"off"},
+  tarde:{t:"Canceló tarde", cobra:true, pill:"red"},
+  noshow:{t:"No vino", cobra:true, pill:"red"}
+};
+
+/* ---------- Utilidades ---------- */
+const pad = n => String(n).padStart(2,"0");
+const ymd = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const parse = s => { const [y,m,d] = s.split("-").map(Number); return new Date(y,m-1,d); };
+const addDays = (d,n) => { const x = new Date(d); x.setDate(x.getDate()+n); return x; };
+const mondayOf = d => { const x = new Date(d.getFullYear(),d.getMonth(),d.getDate()); return addDays(x,-((x.getDay()+6)%7)); };
+const toMin = h => { const [a,b] = h.split(":").map(Number); return a*60+b; };
+const fromMin = m => `${pad(Math.floor(m/60))}:${pad(m%60)}`;
+const mkey = s => s.slice(0,7);
+const cap = s => s.charAt(0).toUpperCase()+s.slice(1);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const uid = () => Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const todayStr = () => ymd(new Date());
+const fechaLarga = s => { const d = parse(s); return `${DIAS[d.getDay()]} ${d.getDate()} de ${MESES[d.getMonth()]}`; };
+const iniciales = n => n.trim().split(/\s+/).slice(0,2).map(p => p[0]).join("").toUpperCase();
+const phoneIntl = p => { let d = String(p||"").replace(/\D/g,""); if (d.startsWith("00")) d = d.slice(2); if (d.length === 9) d = "34"+d; return d; };
+const endMin = date => { const w = parse(date).getDay(); return w === 6 ? 13*60 : w === 0 ? 0 : 21*60; };
+const slotsFor = date => { const o=[]; for (let m=540; m+DURACION<=endMin(date); m+=DURACION) o.push(m); return o; };
+const timeOptions = (date, dur) => { dur = dur || DURACION; const o=[]; const e = endMin(date) || 21*60; for (let m=540; m+dur<=e; m+=15) o.push(fromMin(m)); return o; };
+const DUR = { sesion:45, valoracion:60 };
+const esVal = s => !!s && s.tipo === "valoracion";
+const durDe = s => esVal(s) ? DUR.valoracion : DUR.sesion;
+const nombreTipo = s => esVal(s) ? "Valoración funcional · 60 min" : "Sesión de readaptación · 45 min";
+
+/* ---------- Estado y guardado ---------- */
+const TARIFAS_2026 = [
+  { id:"t26-val", tipo:"sesion", nombre:"Valoración funcional", precio:60, detalle:"60 min · incluye informe" },
+  { id:"t26-suelta", tipo:"sesion", nombre:"Sesión suelta", precio:55, detalle:"Fuera de programa" },
+  { id:"t26-post-int", tipo:"mes", nombre:"Postoperatorio · Fase intensiva", precio:400, detalle:"2 sesiones por semana" },
+  { id:"t26-post-con", tipo:"mes", nombre:"Postoperatorio · Fase consolidación", precio:200, detalle:"1 sesión por semana" },
+  { id:"t26-dep1", tipo:"mes", nombre:"Vuelta al deporte · 1 por semana", precio:200, detalle:"1 sesión por semana" },
+  { id:"t26-dep2", tipo:"mes", nombre:"Vuelta al deporte · 2 por semana", precio:380, detalle:"2 sesiones por semana" },
+  { id:"t26-dolor", tipo:"mes", nombre:"Dolor persistente", precio:200, detalle:"1 sesión por semana" },
+  { id:"t26-salud", tipo:"mes", nombre:"Salud activa · Individual", precio:200, detalle:"1 sesión por semana" },
+  { id:"t26-salud-p", tipo:"mes", nombre:"Salud activa · En pareja", precio:140, detalle:"1 sesión por semana · por persona" },
+  { id:"t26-rend1", tipo:"mes", nombre:"Rendimiento presencial · 1 por semana", precio:220, detalle:"1 sesión por semana + app" },
+  { id:"t26-rend2", tipo:"mes", nombre:"Rendimiento presencial · 2 por semana", precio:400, detalle:"2 sesiones por semana + app" },
+  { id:"t26-mant", tipo:"mes", nombre:"Plan mantenimiento", precio:120, detalle:"2 sesiones al mes" },
+  { id:"t26-par4", tipo:"mes", nombre:"Sesiones en pareja · 4 al mes", precio:140, detalle:"Por persona" },
+  { id:"t26-par6", tipo:"mes", nombre:"Sesiones en pareja · 6 al mes", precio:200, detalle:"Por persona" },
+  { id:"t26-on-bas", tipo:"mes", nombre:"Online Básico", precio:60, detalle:"Hasta 2 días por semana" },
+  { id:"t26-on-pro", tipo:"mes", nombre:"Online Pro", precio:99, detalle:"Hasta 3 días por semana" },
+  { id:"t26-on-eli", tipo:"mes", nombre:"Online Élite híbrido", precio:149, detalle:"Hasta 5 días por semana" }
+];
+const TIPOS = { sesion:"Por sesión", mes:"Mensual", bono:"Bono" };
+const tipoDe = t => t.tipo || (t.sesiones > 1 ? "bono" : "sesion");
+let S = { clientes:{}, sesiones:{}, tarifas: TARIFAS_2026.slice() };
+let me = { id:null, name:"" }, copiaCompartida = null;
+const ui = { grupo:"", tab:"hoy", week: mondayOf(new Date()), day: todayStr(), month: todayStr().slice(0,7), q:"" };
+if (parse(ui.day).getDay() === 0) { ui.week = addDays(ui.week,7); ui.day = ymd(ui.week); }
+
+const queues = {};
+let sb = null;
+const TABLAS = ["clientes","sesiones"];
+function persist(col, id, removed){
+  const key = col+"/"+id;
+  queues[key] = (queues[key] || Promise.resolve()).then(async () => {
+    const cur = S[col][id];
+    const { error } = (removed || !cur) ? await sb.from(col).delete().eq("id", id) : await sb.from(col).upsert({ id, data:cur });
+    if (error) { toast("No se ha podido guardar. Revisa la conexión y vuelve a intentarlo."); setSync("Error al guardar", false); }
+  });
+}
+function put(col, obj){ obj = { ...obj, modPor: me.name || obj.modPor || null, modEn: new Date().toISOString() }; S[col][obj.id] = obj; render(); persist(col, obj.id); }
+function patch(col, id, ch){ put(col, { ...S[col][id], ...ch }); }
+function remove(col, id){ delete S[col][id]; render(); persist(col, id, true); }
+function setSync(t, ok){ document.getElementById("sync").textContent = t; document.getElementById("syncdot").className = "dot" + (ok ? "" : " off"); }
+
+async function cargarTodo(){
+  const res = await Promise.all([...TABLAS, "ajustes"].map(t => sb.from(t).select("id,data")));
+  const err = res.find(r => r.error);
+  if (err) {
+    setSync("Sin conexión con tus datos", false);
+    const m = (err.error.message || "") + (err.error.code ? " (" + err.error.code + ")" : "");
+    const pista = /does not exist|42P01|PGRST205|schema cache/i.test(m) ? " Faltan las tablas: ejecuta supabase.sql en este proyecto."
+      : /permission|42501/i.test(m) ? " Faltan permisos: vuelve a ejecutar supabase.sql."
+      : /jwt|api key/i.test(m) ? " Revisa la clave de config.js." : "";
+    toastLargo("No se han podido cargar los datos." + pista + " Detalle: " + m); return;
+  }
+  TABLAS.forEach((t,i) => { const o = {}; res[i].data.forEach(r => { o[r.id] = r.data; }); S[t] = o; });
+  const tar = res[2].data.find(r => r.id === "tarifas"); S.tarifas = tar && Array.isArray(tar.data.lista) ? tar.data.lista : TARIFAS_2026.slice();
+  const copia = res[2].data.find(r => r.id === "copia"); copiaCompartida = copia ? copia.data : null;
+  setSync("Sincronizado", true); render();
+}
+function escuchar(){
+  const ch = sb.channel("agenda");
+  [...TABLAS, "ajustes"].forEach(t => ch.on("postgres_changes", { event:"*", schema:"public", table:t }, p => {
+    if (t === "ajustes") { const nid = p.new && p.new.id; if (nid === "copia") copiaCompartida = p.new.data; if (nid === "tarifas") S.tarifas = p.new.data.lista || []; render(); return; }
+    if (p.eventType === "DELETE") delete S[t][p.old.id]; else S[t][p.new.id] = p.new.data;
+    render();
+  }));
+  ch.subscribe(st => { if (st === "SUBSCRIBED") setSync("Sincronizado", true); else if (st === "CHANNEL_ERROR" || st === "TIMED_OUT") setSync("Sin actualización en directo", false); });
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) cargarTodo(); });
+}
+
+/* ---------- Acceso ---------- */
+function pantallaLogin(modo){
+  document.getElementById("app").hidden = true;
+  const L = document.getElementById("login"); L.hidden = false; L.style.display = "";
+  const recuperar = modo === "nueva";
+  L.innerHTML = `<form class="box" id="lf" novalidate>
+    <div class="head"><img src="logo.png" alt="Patri S. Rodeiro · Readaptación y rendimiento" width="900" height="225"></div><p class="eyebrow" style="margin:-8px 0 16px">Agenda</p>
+    ${recuperar ? `<div class="f"><label for="lp">Nueva contraseña</label><input id="lp" type="password" autocomplete="new-password" minlength="8"></div>`
+      : `<div class="f"><label for="le">Email</label><input id="le" type="email" autocomplete="username"></div>
+         <div class="f"><label for="lp">Contraseña</label><input id="lp" type="password" autocomplete="current-password"></div>`}
+    <p class="err" id="lerr" role="alert"></p>
+    <button class="btn primary" style="width:100%;justify-content:center;padding:11px" type="submit">${recuperar ? "Guardar contraseña" : "Entrar"}</button>
+    ${recuperar ? "" : `<button class="lnk" type="button" id="lolv">He olvidado mi contraseña</button>`}
+  </form>`;
+  const err = t => { document.getElementById("lerr").textContent = t; };
+  document.getElementById("lf").onsubmit = async e => {
+    e.preventDefault(); err("");
+    if (recuperar) {
+      const pw = document.getElementById("lp").value; if (pw.length < 8) return err("Usa al menos 8 caracteres.");
+      const { error } = await sb.auth.updateUser({ password: pw }); if (error) return err("No se ha podido cambiar. Pide un enlace nuevo.");
+      history.replaceState(null, "", location.pathname); return arrancar();
+    }
+    const email = document.getElementById("le").value.trim(), password = document.getElementById("lp").value;
+    if (!email || !password) return err("Escribe tu email y tu contraseña.");
+    let error;
+    try { ({ error } = await sb.auth.signInWithPassword({ email, password })); }
+    catch(x){ return err("No se puede conectar con Supabase. Revisa la URL de config.js."); }
+    if (error) {
+      const m = (error.message || "").toLowerCase();
+      if (m.includes("invalid login")) return err("Email o contraseña incorrectos.");
+      if (m.includes("not confirmed")) return err("Tu usuario no está confirmado. En Supabase, vuelve a crearlo marcando Auto Confirm User.");
+      if (m.includes("api key") || m.includes("apikey") || error.status === 401) return err("La clave de config.js no es correcta. Vuelve a copiar la Publishable key.");
+      if (m.includes("fetch") || m.includes("network") || !error.status) return err("No se puede conectar con Supabase. Revisa la URL de config.js.");
+      return err("Error de Supabase: " + error.message);
+    }
+    arrancar();
+  };
+  const olv = document.getElementById("lolv");
+  if (olv) olv.onclick = async () => {
+    const email = document.getElementById("le").value.trim(); if (!email) return err("Escribe tu email y vuelve a pulsar.");
+    const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname });
+    err(error ? "No se ha podido enviar el email. Inténtalo más tarde." : "Te hemos enviado un email para cambiar la contraseña.");
+  };
+}
+let arrancada = false;
+async function arrancar(){
+  const { data:{ user } } = await sb.auth.getUser();
+  if (!user) return pantallaLogin();
+  me = { id:user.id, name:(user.user_metadata && user.user_metadata.nombre) || "" };
+  const L = document.getElementById("login"); L.hidden = true; L.style.display = "none"; L.innerHTML = "";
+  const A = document.getElementById("app"); A.hidden = false; A.style.display = "";
+  const quien = document.getElementById("quien"); quien.textContent = me.name || user.email; quien.hidden = false;
+  renderNav(); render();
+  await cargarTodo();
+  if (!arrancada) { arrancada = true; escuchar(); }
+  if (!me.name) pedirNombre();
+}
+function pedirNombre(){
+  openModal("¿Cómo te llamas?", "Se usa para saber quién hace cada cambio en la agenda", `<div class="f"><label for="pn">Tu nombre</label><input id="pn" autocomplete="given-name"></div>`,
+    `<span></span><button class="btn primary" id="pnok">Guardar</button>`);
+  document.getElementById("pnok").onclick = async () => {
+    const n = document.getElementById("pn").value.trim(); if (!n) return toast("Escribe tu nombre");
+    await sb.auth.updateUser({ data:{ nombre:n } }); me.name = n; document.getElementById("quien").textContent = n; closeModal(); render();
+  };
+}
+async function init(){
+  if (!window.supabase || !window.CONFIG || !CONFIG.SUPABASE_URL || CONFIG.SUPABASE_URL.includes("PEGA")) {
+    document.getElementById("login").hidden = false;
+    document.getElementById("login").innerHTML = `<div class="box"><h3 style="margin-top:0">Falta configurar la app</h3><p>Rellena el archivo <b>config.js</b> con la URL y la clave de tu proyecto de Supabase. Tienes los pasos en LEEME.md.</p></div>`;
+    return;
+  }
+  sb = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+  sb.auth.onAuthStateChange(ev => { if (ev === "PASSWORD_RECOVERY") pantallaLogin("nueva"); });
+  if (location.hash.includes("type=recovery")) return;
+  arrancar();
+}
+document.addEventListener("click", async e => { if (!e.target.closest("[data-logout]")) return; await sb.auth.signOut(); location.reload(); });
+
+/* ---------- Consultas ---------- */
+const ses = () => Object.values(S.sesiones);
+const activos = () => Object.values(S.clientes).filter(c => !c.espera);
+const enEspera = () => Object.values(S.clientes).filter(c => c.espera).sort((a,b) => (b.prioridad === "alta") - (a.prioridad === "alta") || String(a.altaEspera||"").localeCompare(String(b.altaEspera||"")));
+const diasDesde = f => f ? Math.max(0, Math.round((parse(todayStr()) - parse(f)) / 86400000)) : 0;
+const cli = id => S.clientes[id] || { nombre:"Cliente borrado", telefono:"" };
+const byTime = (a,b) => (a.fecha+a.hora).localeCompare(b.fecha+b.hora);
+const byName = (a,b) => cli(a).nombre.localeCompare(cli(b).nombre,"es");
+const activa = s => s.estado !== "cancelada";
+const cobrable = s => ESTADOS[s.estado]?.cobra;
+const delDia = f => ses().filter(s => s.fecha === f).sort(byTime);
+function numEnMes(s){ const l = ses().filter(x => x.clienteId === s.clienteId && mkey(x.fecha) === mkey(s.fecha) && activa(x)).sort(byTime); return { n: l.findIndex(x => x.id === s.id)+1, total: l.length }; }
+function maxSeguidas(f){ const l = delDia(f).filter(activa).map(s => ({ a:toMin(s.hora), b:toMin(s.hora)+durDe(s) })); let best = l.length?1:0, run = 1; for (let i=1;i<l.length;i++){ if (l[i].a <= l[i-1].b){ run++; best = Math.max(best,run); } else run = 1; } return best; }
+const eur = n => (Number(n)||0).toLocaleString("es-ES", { minimumFractionDigits: Number(n) % 1 ? 2 : 0, maximumFractionDigits: 2 }) + " €";
+const tarifaDe = cid => { const c = S.clientes[cid]; return c && c.tarifaId ? S.tarifas.find(t => t.id === c.tarifaId) : null; };
+function lineaTarifa(cid){
+  const t = tarifaDe(cid); if (!t) return "";
+  const tp = tipoDe(t);
+  if (tp === "mes") return `Tarifa: ${t.nombre} · ${eur(t.precio)}/mes (pago el día 1 de cada mes)`;
+  if (tp === "bono") return `Tarifa: ${t.nombre} · ${eur(t.precio)}`;
+  return `Precio: ${eur(t.precio)} (${t.nombre})`;
+}
+const esMensual = cid => { const t = tarifaDe(cid); return !!t && tipoDe(t) === "mes"; };
+async function guardarTarifas(){ render(); const { error } = await sb.from("ajustes").upsert({ id:"tarifas", data:{ lista:S.tarifas } }); if (error) toast("No se han podido guardar las tarifas."); }
+let cacheNum = {};
+function anteriorActiva(clienteId, fecha, hora, excluir){ const k = fecha+hora; return ses().filter(x => x.clienteId === clienteId && x.id !== excluir && activa(x) && !esVal(x) && (x.fecha+x.hora) < k).sort(byTime).pop(); }
+function numMes(clienteId, fecha, hora, excluir, nueva){
+  const lista = ses().filter(x => x.clienteId === clienteId && x.id !== excluir && activa(x) && !esVal(x) && mkey(x.fecha) === mkey(fecha));
+  const antes = lista.filter(x => (x.fecha+x.hora) < fecha+hora).length;
+  return { num: antes + 1, total: lista.length + 1, mes:true };
+}
+function sugerirNum(clienteId, fecha, hora, excluir){
+  if (esMensual(clienteId)) return numMes(clienteId, fecha, hora, excluir);
+  const prev = anteriorActiva(clienteId, fecha, hora, excluir);
+  const t = tarifaDe(clienteId), tt = t && tipoDe(t) === "bono" && t.sesiones > 1 ? t.sesiones : null;
+  if (!prev) return { num:1, total:tt };
+  const e = numEf(prev);
+  if (e.total && e.num >= e.total) return { num:1, total: tt || e.total };
+  return { num:e.num+1, total:e.total };
+}
+function numEf(s){
+  if (s.num) return { num:s.num, total:s.total || null };
+  if (cacheNum[s.id]) return cacheNum[s.id];
+  if (esMensual(s.clienteId)) { const e = numMes(s.clienteId, s.fecha, s.hora, s.id); return (cacheNum[s.id] = activa(s) ? e : { num:e.num, total:e.total-1, mes:true }); }
+  return (cacheNum[s.id] = sugerirNum(s.clienteId, s.fecha, s.hora, s.id));
+}
+const etiquetaNum = s => { if (esVal(s)) return "Valoración"; const e = numEf(s); return e.total ? `${e.num}/${e.total}` : `nº ${e.num}`; };
+function precioValoracion(){ const t = S.tarifas.find(t => t.id === "t26-val") || S.tarifas.find(t => /valoraci/i.test(t.nombre)); return t ? t.precio : 60; }
+function precioSuelta(){ const t = S.tarifas.find(t => t.id === "t26-suelta") || S.tarifas.find(t => tipoDe(t) === "sesion" && /suelta/i.test(t.nombre)); return t ? t.precio : null; }
+function precioDe(s){
+  if (s.precio != null && s.precio !== "") return eur(s.precio);
+  if (esVal(s)) return eur(precioValoracion());
+  const t = tarifaDe(s.clienteId);
+  if (!t) { const p = precioSuelta(); return p != null ? eur(p) : ""; }
+  const tp = tipoDe(t);
+  if (tp === "sesion") return eur(t.precio);
+  if (tp === "mes") return `Incluida en tu plan mensual (${t.nombre} · ${eur(t.precio)}/mes, pago el día 1)`;
+  return `Incluida en tu ${t.nombre} (${eur(t.precio)})`;
+}
+function siguienteLaborable(){ let d = addDays(new Date(),1); if (d.getDay() === 0) d = addDays(d,1); return ymd(d); }
+
+/* ---------- Mensajes ---------- */
+function msgReserva(s){
+  const c = cli(s.clienteId), val = esVal(s), pr = precioDe(s);
+  let linea = "";
+  if (!val) { const e = numEf(s); linea = e.total ? `Es tu sesión ${e.num} de ${e.total}${e.mes ? " de " + MESES[parse(s.fecha).getMonth()] : ""}.` : `Es tu sesión nº ${e.num}.`; }
+  return `Hola ${c.nombre.split(" ")[0]}! 👋 Te confirmo tu ${val ? "valoración funcional" : "sesión"}:\n\n📅 ${cap(fechaLarga(s.fecha))} a las ${s.hora}\n⏱️ ${durDe(s)} min\n📍 ${LUGAR}${pr ? "\n💶 Precio: " + pr : ""}${linea ? "\n\n" + linea : ""}\n\nSi no puedes venir, avísame con al menos 24 h de antelación. ${CANCELACION}\n\n${FIRMA}`;
+}
+function msgRecordatorio(s){
+  const c = cli(s.clienteId), d = parse(s.fecha), manana = s.fecha === ymd(addDays(new Date(),1)), pr = precioDe(s);
+  const cuando = manana ? `mañana, ${DIAS[d.getDay()]} ${d.getDate()},` : `del ${DIAS[d.getDay()]} ${d.getDate()}`;
+  const limite = manana ? `hoy antes de las ${s.hora}` : `antes del ${DIAS[addDays(d,-1).getDay()]} a las ${s.hora}`;
+  return `Hola ${c.nombre.split(" ")[0]}! Te recuerdo tu ${esVal(s) ? "valoración funcional" : "sesión"} ${cuando} a las ${s.hora} (${durDe(s)} min).\n\n📍 ${LUGAR}${pr ? "\n💶 Precio: " + pr : ""}\n\nSi necesitas cancelar, avísame ${limite}. ${CANCELACION}\n\n¡Nos vemos! 💪\nPatri`;
+}
+function msgSemana(cid, lunes){
+  const c = cli(cid), ini = ymd(lunes), fin = ymd(addDays(lunes,6));
+  const l = ses().filter(s => s.clienteId === cid && s.fecha >= ini && s.fecha <= fin && activa(s)).sort(byTime);
+  if (!l.length) return "";
+  const lineas = l.map(s => { const d = parse(s.fecha); return `• ${cap(DIAS[d.getDay()])} ${d.getDate()} · ${s.hora} (${esVal(s) ? `valoración, 60 min · ${precioDe(s)}` : `sesión ${etiquetaNum(s)}`})`; }).join("\n");
+  return `Hola ${c.nombre.split(" ")[0]}! 👋 Estas son tus sesiones de la semana:\n\n${lineas}\n\n📍 ${LUGAR}${lineaTarifa(cid) ? "\n💶 " + lineaTarifa(cid) : ""}\n\nSi no puedes venir a alguna, avísame con al menos 24 h de antelación. ${CANCELACION}\n\n${FIRMA}`;
+}
+function avisoPegar(c, m){
+  const gmail = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(c.email)}&su=${encodeURIComponent(m.asunto)}`;
+  openModal("Correo copiado", `Para ${esc(c.nombre)} · ${esc(c.email)}`,
+    `<ol style="margin:0 0 12px;padding-left:20px;line-height:1.7">
+      <li>Pulsa <b>Abrir Gmail</b>: se abre un correo nuevo con el destinatario y el asunto ya puestos.</li>
+      <li>Haz clic en el cuerpo del correo y pega con <b>Ctrl+V</b> (en Mac, <b>Cmd+V</b>).</li>
+      <li>Si Gmail añade también tu firma, bórrala: el correo ya la lleva con el logo.</li>
+      <li>Pulsa <b>Enviar</b>.</li></ol>
+     <div class="f"><span class="flabel">Para</span><div style="display:flex;gap:8px;align-items:stretch"><div class="msgbox" style="margin:0;flex:1;min-width:0;overflow-wrap:anywhere">${esc(c.email)}</div><button class="btn" id="cpara" type="button">${ic("copy")}Copiar</button></div></div>
+     <div class="f"><span class="flabel">Asunto</span><div style="display:flex;gap:8px;align-items:stretch"><div class="msgbox" style="margin:0;flex:1;min-width:0">${esc(m.asunto)}</div><button class="btn" id="casu" type="button">${ic("copy")}Copiar</button></div></div>
+     <div class="f" style="margin:0"><span class="flabel">Cuerpo del correo</span><button class="btn" id="ccuerpo" type="button" style="width:100%;justify-content:center">${ic("copy")}Copiar el correo otra vez</button></div>`,
+    `<span></span><div class="acts"><button class="btn" data-close="1">Cerrar</button><a class="btn primary" href="${gmail}" target="_blank" rel="noopener" style="text-decoration:none">${ic("mail")}Abrir Gmail</a></div>`);
+  const hecho = (b, t) => { b.innerHTML = `${ic("check")}${t}`; };
+  document.getElementById("cpara").onclick = async e => { await copiar(c.email); hecho(e.currentTarget, "Copiado"); };
+  document.getElementById("casu").onclick = async e => { await copiar(m.asunto); hecho(e.currentTarget, "Copiado"); };
+  document.getElementById("ccuerpo").onclick = async e => { const b = e.currentTarget; try { await PlantillaEmail.copiar(m); hecho(b, "Correo copiado"); toast("Correo copiado"); } catch(_) { toast("No se ha podido copiar"); } };
+}
+function planoDe(m){ return `Hola ${m.nombre}:\n\n${m.intro}\n\n${m.lineas.map(([k,v]) => `· ${k}: ${v}`).join("\n")}\n\n${m.nota}\n\nUn saludo,\n`; }
+function emailReserva(s){
+  const c = cli(s.clienteId), d = parse(s.fecha), val = esVal(s), pr = precioDe(s);
+  const lineas = [["Tipo", nombreTipo(s)], ["Día", cap(fechaLarga(s.fecha))], ["Hora", s.hora], ["Lugar", LUGAR]];
+  if (!val) { const e = numEf(s); lineas.push(["Sesión", e.total ? `${e.num} de ${e.total}${e.mes ? " de " + MESES[d.getMonth()] : ""}` : `nº ${e.num}`]); }
+  if (pr) lineas.push(["Precio", pr]);
+  return { tipo:"reserva", etiqueta: val ? "Valoración confirmada" : "Reserva confirmada", titulo: val ? "Tu valoración funcional" : "Tu próxima sesión", nombre:c.nombre.split(" ")[0],
+    asunto:`${val ? "Valoración confirmada" : "Reserva confirmada"} · ${cap(DIAS[d.getDay()])} ${d.getDate()} de ${MESES[d.getMonth()]}, ${s.hora}`,
+    intro: val ? "te confirmo tu valoración funcional. Haremos entrevista, tests de fuerza, movilidad y función, y después recibirás un informe escrito con tu propuesta de programa:" : "te confirmo tu próxima sesión de readaptación:", lineas,
+    nota:`Si no puedes venir, avísame con al menos 24 horas de antelación respondiendo a este correo. ${CANCELACION}` };
+}
+function emailRecordatorio(s){
+  const c = cli(s.clienteId), d = parse(s.fecha), manana = s.fecha === ymd(addDays(new Date(),1)), val = esVal(s), pr = precioDe(s);
+  const cuando = manana ? `mañana, ${DIAS[d.getDay()]} ${d.getDate()},` : `del ${DIAS[d.getDay()]} ${d.getDate()}`;
+  const limite = manana ? `hoy antes de las ${s.hora}` : `antes del ${DIAS[addDays(d,-1).getDay()]} a las ${s.hora}`;
+  const lineas = [["Tipo", nombreTipo(s)], ["Día", cap(fechaLarga(s.fecha))], ["Hora", s.hora], ["Lugar", LUGAR]];
+  if (pr) lineas.push(["Precio", pr]);
+  return { tipo:"recordatorio", etiqueta:"Recordatorio", titulo: manana ? "Nos vemos mañana" : `Nos vemos el ${DIAS[d.getDay()]}`, nombre:c.nombre.split(" ")[0],
+    asunto:`Recordatorio: tu ${val ? "valoración" : "sesión"} ${manana ? "de mañana" : "del " + DIAS[d.getDay()]} a las ${s.hora}`,
+    intro:`te recuerdo tu ${val ? "valoración funcional" : "sesión"} ${cuando} a las ${s.hora}.${val ? " Ven con ropa cómoda para hacer los tests." : ""}`, lineas,
+    nota:`Si necesitas cancelar, avísame ${limite} respondiendo a este correo. ${CANCELACION}` };
+}
+function emailSemana(cid, lunes){
+  const c = cli(cid), ini = ymd(lunes), fin = ymd(addDays(lunes,6)), tar = lineaTarifa(cid);
+  const l = ses().filter(s => s.clienteId === cid && s.fecha >= ini && s.fecha <= fin && activa(s)).sort(byTime);
+  if (!l.length) return null;
+  const lineas = l.map(s => { const d = parse(s.fecha); return [`${cap(DABR[d.getDay()])} ${d.getDate()}`, esVal(s) ? `${s.hora} · valoración (60 min) · ${precioDe(s)}` : `${s.hora} · sesión ${etiquetaNum(s)}`]; });
+  lineas.push(["Lugar", LUGAR]);
+  if (tar) lineas.push(tar.startsWith("Precio") ? ["Precio", tar.replace(/^Precio: /, "")] : ["Tarifa", tar.replace(/^Tarifa: /, "")]);
+  return { tipo:"semana", etiqueta:"Tu semana", titulo:`Semana del ${lunes.getDate()} de ${MESES[lunes.getMonth()]}`, nombre:c.nombre.split(" ")[0],
+    asunto:`Tus sesiones de la semana del ${lunes.getDate()} de ${MESES[lunes.getMonth()]}`,
+    intro:"estas son tus sesiones de la semana:", lineas,
+    nota:`Si no puedes venir a alguna, avísame con al menos 24 horas de antelación respondiendo a este correo. ${CANCELACION}` };
+}
+async function enviarEmail(cid, m, done){
+  const c = cli(cid);
+  if (!c.email) { toast("Este cliente no tiene email. Añádelo en Clientes."); return false; }
+  if (!EMAIL_API) {
+    if (window.PlantillaEmail) {
+      try { await PlantillaEmail.copiar(m); }
+      catch(e) { toast("No se ha podido copiar el correo."); return false; }
+      avisoPegar(c, m);
+      if (done) done(); return true;
+    }
+    window.location.href = `mailto:${encodeURIComponent(c.email)}?subject=${encodeURIComponent(m.asunto)}&body=${encodeURIComponent(planoDe(m))}`;
+    if (done) done(); return true;
+  }
+  toast("Enviando email…");
+  try {
+    const { data:{ session } } = await sb.auth.getSession();
+    const r = await fetch(EMAIL_API, { method:"POST", body: JSON.stringify({ ...m, to:c.email, token: session && session.access_token }) });
+    const j = await r.json();
+    if (!j.ok) throw new Error(j.error || "error");
+    toast(`Email enviado a ${c.nombre.split(" ")[0]}`); if (done) done(); return true;
+  } catch(e) { toastLargo("No se ha podido enviar el email. Prueba de nuevo o envíalo por WhatsApp."); return false; }
+}
+const waLink = (tel, t) => { const p = phoneIntl(tel); return `https://wa.me/${p}?text=${encodeURIComponent(t)}`; };
+async function copiar(t){
+  try { await navigator.clipboard.writeText(t); toast("Mensaje copiado"); }
+  catch(e){ const ta = document.createElement("textarea"); ta.value = t; document.body.appendChild(ta); ta.select(); try { document.execCommand("copy"); toast("Mensaje copiado"); } catch(_){ toast("No se ha podido copiar"); } ta.remove(); }
+}
+function enviar(tel, t, done){ window.open(waLink(tel,t), "_blank", "noopener"); if (done) done(); }
+
+/* ---------- Navegación ---------- */
+const TABS = [["hoy","Hoy"],["semana","Semana"],["clientes","Clientes"],["espera","Espera"],["valoraciones","Valoraciones"],["mes","Mes"]];
+const TAB_LARGO = { espera:"Lista de espera" };
+function pendientes(){
+  const hoy = todayStr(), sig = siguienteLaborable();
+  const reservas = ses().filter(s => s.estado === "programada" && s.fecha >= hoy && !s.reservaEnviada).length;
+  const recs = ses().filter(s => s.fecha === sig && activa(s) && !s.recordatorioEnviado && !(EMAIL_API && cli(s.clienteId).email)).length;
+  return { reservas, recs, total: reservas + recs };
+}
+function avisosHtml(){
+  const p = pendientes(); if (!p.total) return "";
+  const partes = [];
+  if (p.reservas) partes.push(`${p.reservas} ${p.reservas===1?"reserva":"reservas"} sin enviar`);
+  if (p.recs) partes.push(`${p.recs} ${p.recs===1?"recordatorio pendiente":"recordatorios pendientes"} para el ${DIAS[parse(siguienteLaborable()).getDay()]}`);
+  return `<div class="avisos" role="status"><span style="display:flex;gap:10px;align-items:center">${ic("bell")}Tienes ${partes.join(" y ")}.</span><button class="btn small" data-irpend="1">Enviar ahora</button></div>`;
+}
+function actualizarAvisos(){
+  const ne = enEspera().length;
+  document.querySelectorAll('[data-tab="espera"]').forEach(b => { let x = b.querySelector(".badge"); if (ne) { if (!x) { x = document.createElement("span"); x.className = "badge"; x.style.background = "var(--blue-soft)"; x.style.color = "var(--blue)"; b.appendChild(x); } x.textContent = ne; } else if (x) x.remove(); });
+  const n = pendientes().total;
+  document.querySelectorAll('[data-tab="hoy"]').forEach(b => { let x = b.querySelector(".badge"); if (n) { if (!x) { x = document.createElement("span"); x.className = "badge"; b.appendChild(x); } x.textContent = n; } else if (x) x.remove(); });
+  try { if (navigator.setAppBadge) { n ? navigator.setAppBadge(n) : navigator.clearAppBadge(); } } catch(e){}
+}
+function renderNav(){
+  const btn = largo => TABS.map(([k,l]) => `<button data-tab="${k}" ${ui.tab===k?'aria-current="page"':''}>${ic(k)}<span>${largo && TAB_LARGO[k] || l}</span></button>`).join("");
+  document.getElementById("tabs").innerHTML = btn(false); document.getElementById("sidenav").innerHTML = btn(true); actualizarAvisos();
+}
+document.addEventListener("click", e => { const b = e.target.closest("[data-tab]"); if (!b) return; ui.tab = b.dataset.tab; renderNav(); render(); window.scrollTo(0,0); });
+
+function render(){
+  cacheNum = {}; actualizarAvisos();
+  const enVal = ui.tab === "valoraciones";
+  document.getElementById("app").classList.toggle("modo-val", enVal);
+  if (enVal) {
+    const w = document.getElementById("vwrap");
+    if (!w.firstChild) w.innerHTML = `<iframe src="valoraciones/index.html" title="Valoraciones" allow="clipboard-write; fullscreen"></iframe>`;
+    return;
+  }
+  const main = document.getElementById("main"), y = window.scrollY;
+  const focusId = document.activeElement && document.activeElement.id;
+  main.innerHTML = ({ hoy:vHoy, semana:vSemana, clientes:vClientes, espera:vEspera, mes:vMes })[ui.tab]();
+  const ph = main.querySelector(".phead"); if (ph) ph.insertAdjacentHTML("afterend", avisosHtml());
+  if (focusId === "qsearch"){ const i = document.getElementById("qsearch"); i.focus(); i.setSelectionRange(i.value.length, i.value.length); }
+  window.scrollTo(0,y);
+}
+
+/* ---------- Piezas ---------- */
+function pills(s){
+  let h = s.estado !== "programada" ? `<span class="pill ${ESTADOS[s.estado].pill}">${ESTADOS[s.estado].t}</span>` : "";
+  if (cobrable(s) || s.pagado) h += s.pagado ? `<span class="pill paid">Pagado</span>` : `<span class="pill unpaid">Sin pagar</span>`;
+  return h;
+}
+const panel = (title, count, body, hint, hot, pid) => `<section class="panel"${pid?` id="${pid}"`:""}><div class="ph"><h2>${title}${count!==null?` <span class="count${hot&&count?" hot":""}">${count}</span>`:""}</h2>${hint?`<span class="hint">${hint}</span>`:""}</div><div class="pb">${body}</div></section>`;
+const vacio = t => `<div class="empty">${ic("check")}${t}</div>`;
+
+/* ---------- Vista: Hoy ---------- */
+const saludo = () => { const x = new Date().getHours(); return x < 14 ? "Buenos días" : x < 21 ? "Buenas tardes" : "Buenas noches"; };
+function vHoy(){
+  const hoy = todayStr(), now = new Date(), nowMin = now.getHours()*60+now.getMinutes();
+  const porMarcar = ses().filter(s => s.estado === "programada" && (s.fecha < hoy || (s.fecha === hoy && toMin(s.hora)+durDe(s) <= nowMin))).sort(byTime);
+  const sig = siguienteLaborable(), recs = delDia(sig).filter(activa), deHoy = delDia(hoy);
+  const sinReserva = ses().filter(s => s.estado === "programada" && s.fecha >= hoy && !s.reservaEnviada).sort(byTime);
+  const deben = {}; ses().filter(s => cobrable(s) && !s.pagado).forEach(s => (deben[s.clienteId] ||= []).push(s));
+  const lunes = mondayOf(new Date()), ini = ymd(lunes), fin = ymd(addDays(lunes,6));
+  const semAct = ses().filter(s => s.fecha >= ini && s.fecha <= fin && activa(s)).length;
+  const recPend = recs.filter(s => !s.recordatorioEnviado && !(EMAIL_API && cli(s.clienteId).email)).length;
+  const pendPago = Object.values(deben).reduce((a,l) => a+l.length, 0);
+
+  let h = `<div class="phead"><div><h1>${saludo()}${me.name ? ", "+esc(me.name.split(" ")[0]) : ""}</h1><p>${cap(fechaLarga(hoy))}</p></div><div class="pactions"><button class="btn primary" data-new="${hoy}|">${ic("plus")}Nueva sesión</button></div></div>`;
+  const dc = diasDesdeCopia();
+  if (Object.keys(S.sesiones).length && (dc === null || dc >= 7)) h += `<div class="alert"><span>${dc === null ? "Aún no has guardado ninguna copia en tu ordenador." : `Tu última copia es de hace ${dc} días.`}</span><button class="btn small" data-backup="1">${ic("down")}Guardar copia</button></div>`;
+  h += `<div class="kpis">
+    <div class="kpi"><div class="v">${deHoy.filter(activa).length}</div><div class="l">Sesiones hoy</div></div>
+    <div class="kpi"><div class="v">${semAct}<small> / ${CAPACIDAD}</small></div><div class="l">Esta semana</div><div class="bar"><i style="width:${Math.min(semAct/CAPACIDAD*100,100)}%"></i></div></div>
+    <div class="kpi"><div class="v">${recPend}</div><div class="l">Recordatorios por enviar</div></div>
+    <div class="kpi"><div class="v">${pendPago}</div><div class="l">Sesiones sin pagar</div></div>
+    <div class="kpi link" data-tab="espera" role="button" tabindex="0"><div class="v">${enEspera().length}</div><div class="l">En lista de espera</div></div></div>`;
+  if (!Object.keys(S.clientes).length) h += `<section class="panel"><div class="empty">${ic("clientes")}Empieza dando de alta a tus clientes en Clientes. Después planifica la semana en Semana.</div></section>`;
+
+  const itemSes = (s, acts, sub) => `<div class="item wrap"><div class="time">${s.hora}${sub?`<small>${sub}</small>`:""}</div><div class="who"><b>${esc(cli(s.clienteId).nombre)} <span style="font-weight:500;color:var(--muted);font-size:13px">· ${etiquetaNum(s)}</span></b><span>${pills(s)||'<span class="pill prog">Programada</span>'}</span></div><div class="acts">${acts}</div></div>`;
+
+  if (porMarcar.length) h += panel("Marca cómo fueron", porMarcar.length, porMarcar.length ? porMarcar.map(s => itemSes(s,
+      `<button class="btn small primary" data-estado="hecha" data-id="${s.id}">Hecha</button><button class="btn small" data-estado="noshow" data-id="${s.id}">No vino</button><button class="btn small" data-estado="tarde" data-id="${s.id}">Canc. tarde</button><button class="btn small" data-estado="cancelada" data-id="${s.id}">Canc. a tiempo</button>`,
+      s.fecha === hoy ? "" : `${DABR[parse(s.fecha).getDay()]} ${parse(s.fecha).getDate()}`)).join("") : vacio("Todo al día."), null, true);
+  h += `<div class="grid2">`;
+  h += panel("Agenda de hoy", deHoy.length, deHoy.length ? deHoy.map(s => itemSes(s, `<button class="btn small" data-open="${s.id}">Abrir</button>`)).join("") : vacio("No tienes sesiones hoy."));
+  h += panel(`Recordatorios · ${DIAS[parse(sig).getDay()]} ${parse(sig).getDate()}`, recPend, recs.length ? recs.map(s => itemSes(s,
+      !s.recordatorioEnviado && EMAIL_API && cli(s.clienteId).email ? `<span class="pill prog">Automático por email</span>` : s.recordatorioEnviado ? `<span class="pill paid">Enviado</span><button class="btn small ghost" data-copy="rec" data-id="${s.id}">${ic("copy")}</button>` : `<button class="btn small wa" data-wa="rec" data-id="${s.id}">${ic("wa")}WhatsApp</button>${cli(s.clienteId).email ? `<button class="btn small icon" data-mail="rec" data-id="${s.id}" aria-label="Enviar por email">${ic("mail")}</button>` : ""}<button class="btn small icon" data-copy="rec" data-id="${s.id}" aria-label="Copiar">${ic("copy")}</button>`)).join("") : vacio("No hay sesiones ese día."), "Envíalos hoy", true, "p-recs");
+  h += `</div><div style="height:16px"></div><div class="grid2">`;
+  h += panel("Reservas sin enviar", sinReserva.length, sinReserva.length ? sinReserva.map(s => itemSes(s,
+      `<button class="btn small wa" data-wa="res" data-id="${s.id}">${ic("wa")}WhatsApp</button>${cli(s.clienteId).email ? `<button class="btn small icon" data-mail="res" data-id="${s.id}" aria-label="Enviar por email">${ic("mail")}</button>` : ""}<button class="btn small icon" data-copy="res" data-id="${s.id}" aria-label="Copiar">${ic("copy")}</button><button class="btn small ghost" data-flag="reservaEnviada" data-id="${s.id}">Ya enviada</button>`,
+      `${DABR[parse(s.fecha).getDay()]} ${parse(s.fecha).getDate()}`)).join("") : vacio("Todas las reservas están enviadas."), null, true, "p-reservas");
+  const esp = enEspera();
+  if (esp.length) {
+    const libres = Math.max(CAPACIDAD - semAct, 0);
+    h += panel("Lista de espera", esp.length, esp.slice(0,3).map(itemEspera).join("") + `<div class="item" style="justify-content:space-between"><span style="font-size:13.5px;color:var(--muted)">${libres ? `Tienes ${libres} ${libres===1?"hueco libre":"huecos libres"} esta semana.` : "Esta semana estás completa."}</span><button class="btn small" data-tab="espera">Ver toda la lista</button></div>`, null, false);
+  }
+  const ids = Object.keys(deben).sort(byName);
+  h += panel("Pendiente de pago", ids.length, ids.length ? ids.map(id => `<div class="item"><div class="avatar">${esc(iniciales(cli(id).nombre))}</div><div class="who"><b>${esc(cli(id).nombre)}</b><span>${deben[id].length} ${deben[id].length===1?"sesión":"sesiones"} sin pagar</span></div><div class="acts"><button class="btn small" data-pagar="${id}">${ic("check")}Marcar pagado</button></div></div>`).join("") : vacio("Nadie te debe nada."), null, true);
+  return h + `</div>`;
+}
+
+/* ---------- Vista: Semana ---------- */
+const T0 = 540, T1 = 1260, NROWS = (T1-T0)/15;
+function chipHtml(s, col){
+  const r = Math.round((toMin(s.hora)-T0)/15); if (r < 0 || r >= NROWS) return "";
+  const pago = cobrable(s) || s.pagado ? `<i class="mini ${s.pagado?"paid":"unpaid"}" title="${s.pagado?"Pagado":"Sin pagar"}"></i>` : "";
+  const unsent = s.estado === "programada" && !s.reservaEnviada ? " unsent" : "";
+  if (!activa(s)) return `<button class="chip cancelada" style="grid-row:${r+2}/span ${durDe(s)/15};grid-column:${col}" data-open="${s.id}" title="${esc(cli(s.clienteId).nombre)} · canceló a tiempo"><b>${esc(iniciales(cli(s.clienteId).nombre))}</b></button>`;
+  return `<button class="chip ${s.estado}${unsent}${esVal(s) ? " val" : ""}" style="grid-row:${r+2}/span ${durDe(s)/15};grid-column:${col}" data-open="${s.id}"><b>${esc(cli(s.clienteId).nombre)}</b><small>${s.hora} · ${etiquetaNum(s)} ${pago}</small></button>`;
+}
+function calGrid(dias, conCabecera){
+  const hoy = todayStr(), cols = dias.length;
+  let g = `<div class="tg" style="grid-template-columns:52px repeat(${cols},minmax(${cols>1?118:0}px,1fr));grid-template-rows:${conCabecera?"auto":"0"} repeat(${NROWS},19px)">`;
+  g += `<div class="tgh corner"></div>`;
+  dias.forEach((f,i) => { const d = parse(f), seg = maxSeguidas(f);
+    g += conCabecera ? `<div class="tgh ${f===hoy?"today":""}" style="grid-column:${i+2}"><b>${DIAS[d.getDay()]}</b><span>${d.getDate()}</span><em>${delDia(f).filter(activa).length} ses.</em>${seg > MAX_SEGUIDAS ? `<span class="w">${seg} seguidas</span>` : ""}</div>` : `<div style="grid-column:${i+2}"></div>`; });
+  for (let r=0; r<NROWS; r+=4) g += `<div class="tgl" style="grid-row:${r+2}/span 4">${fromMin(T0+r*15)}</div>`;
+  dias.forEach((f,i) => {
+    const col = i+2, e = endMin(f);
+    for (let r=0; r<NROWS; r++){
+      const m = T0 + r*15; if (m >= e) break;
+      const cls = (r%4===0 ? "hr" : r%2===0 ? "half" : "") + (f===hoy ? " today" : "");
+      g += m + DURACION <= e
+        ? `<button class="q ${cls}" style="grid-row:${r+2};grid-column:${col}" data-new="${f}|${fromMin(m)}" aria-label="Añadir sesión el ${fechaLarga(f)} a las ${fromMin(m)}"><span>+ ${fromMin(m)}</span></button>`
+        : `<div class="q ${cls}" style="grid-row:${r+2};grid-column:${col}"></div>`;
+    }
+    if (e < T1) g += `<div class="closed" style="grid-row:${(e-T0)/15+2}/span ${(T1-e)/15};grid-column:${col}"><span>Cerrado</span></div>`;
+    delDia(f).forEach(s => { g += chipHtml(s, col); });
+  });
+  return g + `</div>`;
+}
+function vSemana(){
+  const lunes = ui.week, dias = [0,1,2,3,4,5].map(i => ymd(addDays(lunes,i))), sab = addDays(lunes,5);
+  if (!dias.includes(ui.day)) ui.day = dias[0];
+  const semana = ses().filter(s => s.fecha >= dias[0] && s.fecha <= dias[5]);
+  const act = semana.filter(activa).length, hechas = semana.filter(s => s.estado === "hecha").length;
+  const lbl = lunes.getMonth() === sab.getMonth() ? `${lunes.getDate()} – ${sab.getDate()} de ${MESES[sab.getMonth()]}` : `${lunes.getDate()} ${MESES[lunes.getMonth()].slice(0,3)} – ${sab.getDate()} ${MESES[sab.getMonth()].slice(0,3)}`;
+  let h = `<div class="phead"><div><h1>Semana</h1><p>${lbl} ${sab.getFullYear()}</p></div><div class="pactions">
+    <div class="wknav"><button class="btn icon" data-week="-1" aria-label="Semana anterior">${ic("left")}</button><button class="btn" data-week="0">Hoy</button><button class="btn icon" data-week="1" aria-label="Semana siguiente">${ic("right")}</button></div>
+    <button class="btn" data-copyweek="1">${ic("repeat")}Copiar semana anterior</button><button class="btn primary" data-plan="1">${ic("send")}Enviar plan semanal</button></div></div>`;
+  h += `<div class="kpis">
+    <div class="kpi"><div class="v">${act}<small> / ${CAPACIDAD}</small></div><div class="l">Sesiones programadas</div><div class="bar"><i style="width:${Math.min(act/CAPACIDAD*100,100)}%"></i></div></div>
+    <div class="kpi"><div class="v">${Math.max(CAPACIDAD-act,0)}</div><div class="l">Huecos hasta tu objetivo</div></div>
+    <div class="kpi"><div class="v">${hechas}</div><div class="l">Hechas</div></div>
+    <div class="kpi"><div class="v">${semana.filter(s => s.estado === "programada" && !s.reservaEnviada).length}</div><div class="l">Reservas sin enviar</div></div></div>`;
+  const legend = `<div class="legend"><span><i class="sw" style="background:var(--blue)"></i>Sesión</span><span><i class="sw" style="background:var(--accent)"></i>Valoración</span><span><i class="sw" style="background:var(--green)"></i>Hecha</span><span><i class="sw" style="background:var(--red)"></i>No vino o canceló tarde</span><span><i class="sw unsent-sw"></i>Reserva sin enviar</span><span><i class="mini unpaid"></i>Sin pagar</span><span><i class="mini paid"></i>Pagado</span></div>`;
+  h += `<div class="wk-desk"><section class="panel"><div class="ph"><h2>Calendario</h2><span class="hint">Pulsa un hueco para añadir una sesión</span></div><div class="cal-wrap">${calGrid(dias, true)}</div>${legend}</section></div>`;
+  let mob = `<div class="days">${dias.map(f => { const d = parse(f); return `<button data-day="${f}" aria-pressed="${f===ui.day}"><b>${DABR[d.getDay()]}</b><span>${d.getDate()}</span><em>${delDia(f).filter(activa).length} ses.</em></button>`; }).join("")}</div>`;
+  const seg = maxSeguidas(ui.day);
+  if (seg > MAX_SEGUIDAS) mob += `<div class="alert">${seg} sesiones seguidas este día. Tu límite es ${MAX_SEGUIDAS}: deja un hueco.</div>`;
+  mob += `<section class="panel"><div class="ph"><h2>${cap(fechaLarga(ui.day))}</h2><span class="hint">Toca un hueco para añadir</span></div><div class="cal-wrap">${calGrid([ui.day], false)}</div>${legend}</section>`;
+  h += `<div class="wk-mob">${mob}</div>`;
+  return h;
+}
+
+/* ---------- Vista: Clientes ---------- */
+function vClientes(){
+  const mes = todayStr().slice(0,7), q = normNombre(ui.q);
+  const todos = activos().sort((a,b) => a.nombre.localeCompare(b.nombre,"es"));
+  const grupos = [...new Set(todos.map(c => c.grupo).filter(Boolean))].sort();
+  if (ui.grupo && !grupos.includes(ui.grupo)) ui.grupo = "";
+  const l = todos.filter(c => (!ui.grupo || c.grupo === ui.grupo) && (!q || normNombre(c.nombre).includes(q) || (c.telefono||"").replace(/\s/g,"").includes(q.replace(/\s/g,"")) || (c.email||"").toLowerCase().includes(q) || (c.dni||"").toLowerCase().includes(q)));
+  let h = `<div class="phead"><div><h1>Clientes</h1><p>${todos.length} ${todos.length===1?"cliente":"clientes"}</p></div><div class="pactions">
+    <label class="search">${ic("search")}<input id="qsearch" placeholder="Buscar por nombre, móvil, email o DNI" value="${esc(ui.q)}" aria-label="Buscar cliente"></label>
+    ${grupos.length ? `<select id="fgrupo" class="btn" aria-label="Filtrar por grupo" style="padding-right:8px"><option value="">Todos los grupos</option>${grupos.map(g => `<option ${g===ui.grupo?"selected":""}>${esc(g)}</option>`).join("")}</select>` : ""}
+    <button class="btn" data-importar="1">${ic("up")}Importar Excel</button>
+    <button class="btn primary" data-cliente="">${ic("plus")}Nuevo cliente</button></div></div>
+    <input type="file" id="fileClientes" accept=".xlsx,.xls,.csv,.ods" hidden>`;
+  if (!todos.length) return h + `<section class="panel"><div class="empty">${ic("clientes")}Aún no tienes clientes. Añade el primero con su nombre y su móvil, o pulsa <b>Importar Excel</b> para cargarlos todos de una vez.</div></section>` + panelTarifas();
+  const rows = l.map(c => { const suyas = ses().filter(s => s.clienteId === c.id);
+    const enMes = suyas.filter(s => mkey(s.fecha) === mes && activa(s)).length, debe = suyas.filter(s => cobrable(s) && !s.pagado).length;
+    const prox = suyas.filter(s => s.fecha >= todayStr() && activa(s)).sort(byTime)[0];
+    return `<tr><td><div style="display:flex;align-items:center;gap:11px"><div class="avatar">${esc(iniciales(c.nombre))}</div><div><b>${esc(c.nombre)}</b>${c.grupo || c.email ? `<div style="font-size:12.5px;color:var(--muted)">${[c.grupo, c.email].filter(Boolean).map(esc).join(" · ")}</div>` : ""}</div></div></td><td>${esc(c.telefono)||`<span class="pill unpaid">Falta móvil</span>`}</td><td>${tarifaDe(c.id) ? esc(tarifaDe(c.id).nombre) : `<span style="color:var(--muted)">–</span>`}</td><td class="n">${enMes}</td><td>${prox ? `${cap(DABR[parse(prox.fecha).getDay()])} ${parse(prox.fecha).getDate()} · ${prox.hora}` : "–"}</td><td>${debe ? `<span class="pill unpaid">${debe} sin pagar</span>` : `<span class="pill paid">Al día</span>`}</td><td class="n"><button class="btn small" data-cliente="${c.id}">Abrir</button></td></tr>`; }).join("");
+  h += `<section class="panel"><div class="tbl"><table><thead><tr><th>Cliente</th><th>Móvil</th><th>Tarifa</th><th class="n">Sesiones este mes</th><th>Próxima</th><th>Pagos</th><th></th></tr></thead><tbody>${rows || `<tr><td colspan="7" class="empty">Ningún cliente coincide con la búsqueda.</td></tr>`}</tbody></table></div></section>`;
+  return h + panelTarifas();
+}
+const normNombre = s => String(s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/\s+/g," ").trim();
+function cargarXLSX(){
+  if (window.XLSX) return Promise.resolve();
+  return new Promise((ok, ko) => { const s = document.createElement("script"); s.src = "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"; s.onload = ok; s.onerror = () => ko(new Error("carga")); document.head.appendChild(s); });
+}
+async function leerExcel(file){
+  await cargarXLSX();
+  const wb = XLSX.read(await file.arrayBuffer(), { type:"array" });
+  const lista = [];
+  wb.SheetNames.forEach(hoja => {
+    const filas = XLSX.utils.sheet_to_json(wb.Sheets[hoja], { header:1, defval:"", raw:false });
+    const hi = filas.findIndex(f => f.some(c => /nombre/i.test(String(c))));
+    if (hi < 0) return;
+    const H = filas[hi].map(c => normNombre(c));
+    const col = re => H.findIndex(c => re.test(c));
+    const iN = col(/nombre/), iD = col(/\b(dni|nif|nie)\b/), iDom = col(/domicilio|direccion/), iT = col(/telefono|movil|tlf|tel\b/), iE = col(/e-?mail|correo/), iO = col(/observ|nota/), iG = col(/grupo|origen|centro/);
+    const grupoHoja = /^(hoja|sheet|clientes)\s*\d*$/i.test(hoja.trim()) ? "" : hoja.trim();
+    filas.slice(hi + 1).forEach(f => {
+      const v = i => i < 0 ? "" : String(f[i] == null ? "" : f[i]).trim();
+      const nombre = v(iN).replace(/\s+/g, " "); if (!nombre) return;
+      let email = v(iE).toLowerCase(); if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) email = "";
+      lista.push({ nombre, dni:v(iD).toUpperCase().replace(/\s/g,""), domicilio:v(iDom), telefono:v(iT).replace(/[^\d+ ]/g,"").trim(), email, nota:v(iO), grupo:v(iG) || grupoHoja });
+    });
+  });
+  const m = new Map();
+  lista.forEach(r => { const k = normNombre(r.nombre), o = m.get(k);
+    if (!o) return m.set(k, r);
+    ["dni","domicilio","telefono","email","grupo"].forEach(f => { if (!o[f] && r[f]) o[f] = r[f]; });
+    if (r.nota && !o.nota.includes(r.nota)) o.nota = [o.nota, r.nota].filter(Boolean).join("; "); });
+  return [...m.values()];
+}
+async function importarClientes(file){
+  toast("Leyendo el archivo…");
+  let lista;
+  try { lista = await leerExcel(file); } catch(e) { return toastLargo("No se ha podido leer el archivo. Usa un Excel (.xlsx) o CSV con una columna «Nombre»."); }
+  if (!lista.length) return toastLargo("No he encontrado clientes. El archivo necesita una columna llamada «Nombre» o «Nombre y Apellidos».");
+  const existentes = new Map(Object.values(S.clientes).map(c => [normNombre(c.nombre), c]));
+  const nuevos = [], completar = [];
+  lista.forEach(r => {
+    const ex = existentes.get(normNombre(r.nombre));
+    if (!ex) return nuevos.push(r);
+    const cambios = {};
+    ["dni","domicilio","telefono","email","grupo"].forEach(f => { if (!ex[f] && r[f]) cambios[f] = r[f]; });
+    if (r.nota && !(ex.nota || "").includes(r.nota)) cambios.nota = [ex.nota, r.nota].filter(Boolean).join("; ");
+    if (Object.keys(cambios).length) completar.push({ ex, cambios });
+  });
+  const iguales = lista.length - nuevos.length - completar.length;
+  const porGrupo = {}; nuevos.forEach(r => { const g = r.grupo || "Sin grupo"; porGrupo[g] = (porGrupo[g] || 0) + 1; });
+  const sinTel = nuevos.filter(r => !r.telefono).length, sinEmail = nuevos.filter(r => !r.email).length;
+  const filas = nuevos.slice(0, 60).map(r => `<tr><td style="white-space:nowrap">${esc(r.nombre)}</td><td>${esc(r.grupo || "–")}</td><td>${r.email ? esc(r.email) : '<span style="color:var(--muted)">–</span>'}</td><td>${r.telefono ? esc(r.telefono) : '<span style="color:var(--muted)">–</span>'}</td></tr>`).join("");
+  const total = nuevos.length + completar.length;
+  openModal("Importar clientes", esc(file.name),
+    `<div class="kpis" style="box-shadow:none;margin-bottom:14px"><div class="kpi"><div class="v">${nuevos.length}</div><div class="l">Nuevos</div></div><div class="kpi"><div class="v">${completar.length}</div><div class="l">Ya existen: se completan datos vacíos</div></div><div class="kpi"><div class="v">${iguales}</div><div class="l">Ya existen sin cambios</div></div><div class="kpi"><div class="v">${Object.keys(porGrupo).length}</div><div class="l">Grupos</div></div></div>
+     ${nuevos.length ? `<p style="margin:0 0 10px;font-size:14px">${Object.entries(porGrupo).map(([g,n]) => `<span class="pill prog" style="margin-bottom:4px">${esc(g)}: ${n}</span>`).join(" ")}</p>` : ""}
+     ${sinTel ? `<div class="mwarn">${ic("bell")}${sinTel} ${sinTel===1?"cliente nuevo no tiene":"clientes nuevos no tienen"} móvil: podrás enviarles email, pero no WhatsApp hasta que lo añadas.</div>` : ""}
+     ${sinEmail ? `<p style="font-size:13px;color:var(--muted);margin:0 0 12px">${sinEmail} sin email.</p>` : ""}
+     ${nuevos.length ? `<div class="tbl" style="border:1px solid var(--line);border-radius:10px;max-height:300px;overflow:auto"><table style="min-width:520px"><thead><tr><th>Nombre</th><th>Grupo</th><th>Email</th><th>Móvil</th></tr></thead><tbody>${filas}</tbody></table></div>${nuevos.length > 60 ? `<p style="font-size:12.5px;color:var(--muted)">…y ${nuevos.length - 60} más.</p>` : ""}` : ""}
+     <p style="font-size:12.5px;color:var(--muted);margin:12px 0 0">Los clientes se reconocen por el nombre: si ya existe, no se duplica y solo se rellenan los datos que le falten. No se borra nada.</p>`,
+    `<span></span><div class="acts"><button class="btn" data-close="1">Cancelar</button><button class="btn primary" id="impOk" ${total ? "" : "disabled"}>${total ? `Importar ${total} ${total===1?"cliente":"clientes"}` : "Nada que importar"}</button></div>`);
+  document.getElementById("impOk").onclick = async () => {
+    const ahora = new Date().toISOString(), por = me.name || null;
+    const objs = [
+      ...nuevos.map(r => ({ id:uid(), nombre:r.nombre, telefono:r.telefono, email:r.email, dni:r.dni, domicilio:r.domicilio, grupo:r.grupo, nota:r.nota, tarifaId:"", modPor:por, modEn:ahora })),
+      ...completar.map(({ ex, cambios }) => ({ ...ex, ...cambios, modPor:por, modEn:ahora }))
+    ];
+    objs.forEach(o => { S.clientes[o.id] = o; });
+    closeModal(); render(); toast("Importando…");
+    try {
+      for (let i = 0; i < objs.length; i += 200) { const { error } = await sb.from("clientes").upsert(objs.slice(i, i+200).map(o => ({ id:o.id, data:o }))); if (error) throw error; }
+      toastLargo(`Listo: ${nuevos.length} ${nuevos.length===1?"cliente nuevo":"clientes nuevos"}${completar.length ? ` y ${completar.length} completados` : ""}.`);
+    } catch(e) { toastLargo("La importación se ha cortado. Vuelve a importar el mismo archivo: no se duplicará nada."); }
+  };
+}
+function panelTarifas(){
+  const tiene2026 = S.tarifas.some(t => String(t.id).startsWith("t26-"));
+  const grupos = ["sesion","mes","bono"].map(tp => [tp, S.tarifas.filter(t => tipoDe(t) === tp)]).filter(([,l]) => l.length);
+  const body = grupos.length ? grupos.map(([tp, l]) => `<div class="eyebrow" style="padding:12px 18px 4px">${TIPOS[tp]}</div>` + l.map(t => { const n = Object.values(S.clientes).filter(c => c.tarifaId === t.id).length;
+    return `<div class="item"><div class="who"><b>${esc(t.nombre)}</b><span>${esc(t.detalle || (tipoDe(t) === "bono" ? `${t.sesiones} sesiones` : ""))}${t.detalle || tipoDe(t) === "bono" ? " · " : ""}${n} ${n===1?"cliente":"clientes"}</span></div><div style="font-weight:800;font-size:16px;white-space:nowrap">${eur(t.precio)}${tipoDe(t) === "mes" ? '<span style="font-weight:500;font-size:12px;color:var(--muted)">/mes</span>' : ""}</div><div class="acts"><button class="btn small" data-tarifa="${t.id}">Editar</button></div></div>`; }).join("")).join("") : vacio("Aún no tienes tarifas.");
+  return `<section class="panel"><div class="ph"><h2>Tarifas <span class="count">${S.tarifas.length}</span></h2><div class="acts">${tiene2026 ? "" : `<button class="btn small primary" data-cargar2026="1">Cargar tarifas 2026</button>`}<button class="btn small" data-tarifa="">${ic("plus")}Nueva tarifa</button></div></div><div class="pb">${body}</div></section>`;
+}
+function cargarTarifas2026(){
+  const usadas = S.tarifas.filter(t => !String(t.id).startsWith("t26-") && Object.values(S.clientes).some(c => c.tarifaId === t.id))
+    .map(t => ({ ...t, tipo: tipoDe(t), nombre: t.nombre.includes("(antigua)") ? t.nombre : t.nombre + " (antigua)" }));
+  if (!confirm(`Se cargarán las ${TARIFAS_2026.length} tarifas de 2026.${usadas.length ? ` Las ${usadas.length} tarifas antiguas que usan tus clientes se mantienen marcadas como "(antigua)" para que se las cambies.` : ""} ¿Continuar?`)) return;
+  S.tarifas = [...TARIFAS_2026, ...usadas]; guardarTarifas(); toast("Tarifas 2026 cargadas");
+}
+function modalTarifa(id){
+  const t = id ? S.tarifas.find(x => x.id === id) : { nombre:"", tipo:"mes", sesiones:1, precio:"", detalle:"" };
+  const tp0 = id ? tipoDe(t) : "mes";
+  openModal(id ? "Editar tarifa" : "Nueva tarifa", "Se muestra en las reservas de los clientes que la tengan",
+    `<div class="f"><label for="tn">Nombre</label><input id="tn" value="${esc(t.nombre)}" placeholder="Ej.: Postoperatorio · Fase intensiva"></div>
+     <div class="two"><div class="f"><label for="tt">Tipo</label><select id="tt">${Object.entries(TIPOS).map(([k,v]) => `<option value="${k}" ${k===tp0?"selected":""}>${v}</option>`).join("")}</select></div>
+     <div class="f"><label for="tp">Precio (€)</label><input id="tp" type="number" min="0" step="0.01" inputmode="decimal" value="${t.precio}"><div class="hint" id="tph"></div></div></div>
+     <div class="f" id="tsbox"><label for="ts">Sesiones del bono</label><input id="ts" type="number" min="2" inputmode="numeric" value="${t.sesiones > 1 ? t.sesiones : 4}"></div>
+     <div class="f"><label for="td">Detalle (opcional)</label><input id="td" value="${esc(t.detalle || "")}" placeholder="Ej.: 2 sesiones por semana"></div>`,
+    `${id ? `<button class="btn danger" id="tdel">Eliminar</button>` : "<span></span>"}<div class="acts"><button class="btn" data-close="1">Cancelar</button><button class="btn primary" id="tsave">Guardar</button></div>`);
+  const $ = q => document.getElementById(q);
+  const upd = () => { const v = $("tt").value; $("tsbox").hidden = v !== "bono"; $("tph").textContent = v === "mes" ? "Precio al mes." : v === "bono" ? "Precio del bono completo." : "Precio de una sesión."; };
+  $("tt").onchange = upd; upd();
+  $("tsave").onclick = () => {
+    const nombre = $("tn").value.trim(), tipo = $("tt").value, precio = parseFloat(String($("tp").value).replace(",", "."));
+    const sesiones = tipo === "bono" ? parseInt($("ts").value, 10) : 1;
+    if (!nombre) return toast("Pon un nombre"); if (isNaN(precio) || precio < 0) return toast("Revisa el precio"); if (tipo === "bono" && (!sesiones || sesiones < 2)) return toast("Un bono tiene al menos 2 sesiones");
+    const nueva = { id: id || "t-" + uid(), tipo, nombre, precio, sesiones, detalle:$("td").value.trim() };
+    S.tarifas = id ? S.tarifas.map(x => x.id === id ? nueva : x) : [...S.tarifas, nueva];
+    closeModal(); guardarTarifas();
+  };
+  if (id) $("tdel").onclick = () => {
+    const n = Object.values(S.clientes).filter(c => c.tarifaId === id).length;
+    if (n) return toast(`La usan ${n} ${n===1?"cliente":"clientes"}. Cámbiales la tarifa antes de eliminarla.`);
+    if (!confirm("¿Eliminar esta tarifa?")) return;
+    S.tarifas = S.tarifas.filter(x => x.id !== id); closeModal(); guardarTarifas();
+  };
+}
+document.addEventListener("input", e => { if (e.target.id === "qsearch"){ ui.q = e.target.value; render(); } });
+document.addEventListener("change", e => {
+  if (e.target.id === "fgrupo") { ui.grupo = e.target.value; render(); }
+  if (e.target.id === "fileClientes") { const f = e.target.files[0]; e.target.value = ""; if (f) importarClientes(f); }
+});
+
+/* ---------- Vista: Lista de espera ---------- */
+const DISPONIBILIDAD = ["Mañanas","Tardes","Sábados"];
+function serviciosEspera(){
+  const base = ["Valoración funcional", "Postoperatorio", "Vuelta al deporte", "Dolor persistente", "Salud activa", "Rendimiento presencial", "Entrenamiento online", "Plan mantenimiento", "Sesiones en pareja"];
+  return [...base, "Otro"];
+}
+function itemEspera(c){
+  const dias = diasDesde(c.altaEspera);
+  const info = [c.servicio, (c.disponibilidad || []).join(", "), c.derivadoPor ? "Derivado por " + c.derivadoPor : ""].filter(Boolean).map(esc).join(" · ");
+  const contacto = (c.ultimoContacto ? `Contactado ${diasDesde(c.ultimoContacto) === 0 ? "hoy" : "hace " + diasDesde(c.ultimoContacto) + " d"}` : "Sin contactar") + (c.mensajeEspera ? "" : ` · <span style="color:var(--amber);font-weight:600">Falta mensaje de bienvenida</span>`);
+  return `<div class="item wrap"><div class="avatar">${esc(iniciales(c.nombre))}</div><div class="who"><b>${esc(c.nombre)} ${c.prioridad === "alta" ? '<span class="pill red">Prioritario</span>' : ""}</b><span>${info || "Sin datos de servicio"}</span><span style="display:block;font-size:12.5px;color:var(--muted)">En espera ${dias === 0 ? "desde hoy" : `hace ${dias} ${dias===1?"día":"días"}`} · ${contacto}</span></div><div class="acts">
+    <button class="btn small" data-ebien="${c.id}">${ic("send")}${c.mensajeEspera ? "Reenviar info" : "Enviar info"}</button>
+    ${c.telefono ? `<button class="btn small wa" data-ewa="${c.id}" title="Avisar de que hay hueco">${ic("wa")}Hay hueco</button>` : ""}
+    <button class="btn small primary" data-ecita="${c.id}">Dar cita</button>
+    <button class="btn small" data-espera="${c.id}">Editar</button></div></div>`;
+}
+function vEspera(){
+  const l = enEspera();
+  const lunes = mondayOf(new Date()), ini = ymd(lunes), fin = ymd(addDays(lunes,6));
+  const libres = Math.max(CAPACIDAD - ses().filter(s => s.fecha >= ini && s.fecha <= fin && activa(s)).length, 0);
+  const prio = l.filter(c => c.prioridad === "alta").length;
+  const media = l.length ? Math.round(l.reduce((a,c) => a + diasDesde(c.altaEspera), 0) / l.length) : 0;
+  let h = `<div class="phead"><div><h1>Lista de espera</h1><p>${l.length} ${l.length===1?"persona":"personas"} esperando</p></div><div class="pactions"><button class="btn primary" data-espera="">${ic("plus")}Añadir a la lista</button></div></div>`;
+  h += `<div class="kpis"><div class="kpi"><div class="v">${l.length}</div><div class="l">En espera</div></div><div class="kpi"><div class="v">${prio}</div><div class="l">Prioritarios</div></div><div class="kpi"><div class="v">${media}<small> días</small></div><div class="l">Espera media</div></div><div class="kpi"><div class="v">${libres}</div><div class="l">Huecos libres esta semana</div></div></div>`;
+  if (!l.length) return h + `<section class="panel"><div class="empty">${ic("espera")}No tienes a nadie en espera. Cuando alguien quiera empezar y no tengas hueco, pulsa <b>Añadir a la lista</b>.</div></section>`;
+  h += panel("Por orden de llegada", null, l.map(itemEspera).join(""), "Los prioritarios van primero", false);
+  h += `<p style="font-size:13px;color:var(--muted);margin:4px 2px">Al pulsar <b>Dar cita</b>, la persona pasa a Clientes con todos sus datos y se abre la reserva (por defecto, la valoración de 60 min).</p>`;
+  return h;
+}
+const urlTarifas = () => new URL("tarifas-2026.pdf", location.href).href;
+function puestoEspera(id){ const l = enEspera(); return { pos: l.findIndex(c => c.id === id) + 1, total: l.length }; }
+function textoServicio(c){ return c.servicio && c.servicio !== "Otro" ? c.servicio : ""; }
+function paraServicio(serv){ return !serv ? "" : /valoraci/i.test(serv) ? " para tu valoración funcional" : " para el programa de " + serv.toLowerCase(); }
+function msgBienvenidaEspera(c){
+  const { pos } = puestoEspera(c.id), serv = textoServicio(c), online = /online/i.test(serv);
+  return `Hola ${c.nombre.split(" ")[0]}! 👋 Soy Patri S. Rodeiro, readaptadora de lesiones en ${LUGAR}.
+
+Te confirmo que ya estás en mi lista de espera${paraServicio(serv)}. Ahora mismo ocupas el puesto nº ${pos}.
+
+Así funciona:
+1️⃣ En cuanto tenga un hueco te escribo para proponerte día y hora.
+2️⃣ Empezamos con una valoración funcional (${online ? "por videollamada" : "60 min, " + eur(precioValoracion())}): entrevista, tests de fuerza, movilidad y función, e informe escrito con tu propuesta de programa.
+3️⃣ Después seguimos con sesiones individuales de 45 min, coordinadas con tu fisioterapeuta o médico.
+
+📄 Te envío también mis tarifas en PDF, con todos los programas y precios:
+${urlTarifas()}
+
+${online ? "" : `📍 ${LUGAR}\n\n`}Si cambia tu disponibilidad o ya no te interesa, respóndeme a este mensaje y lo actualizo.
+
+${FIRMA}`;
+}
+function emailBienvenidaEspera(c){
+  const { pos, total } = puestoEspera(c.id), serv = textoServicio(c), online = /online/i.test(serv);
+  const lineas = [["Tu puesto", `nº ${pos} de ${total}`]];
+  if (serv) lineas.push(["Servicio", serv]);
+  if ((c.disponibilidad || []).length) lineas.push(["Disponibilidad", c.disponibilidad.join(", ")]);
+  lineas.push(["Siguiente paso", "Te escribiré en cuanto tenga hueco para proponerte día y hora"]);
+  lineas.push(["Primera cita", online ? "Valoración funcional por videollamada" : `Valoración funcional · 60 min · ${eur(precioValoracion())}`]);
+  if (!online) lineas.push(["Lugar", LUGAR]);
+  lineas.push(["Tarifas", urlTarifas()]);
+  return { tipo:"espera", adjuntos:["tarifas-2026.pdf"], etiqueta:"Lista de espera", titulo:"Ya estás en mi lista de espera", nombre:c.nombre.split(" ")[0],
+    asunto:"Ya estás en la lista de espera · Patri S. Rodeiro",
+    intro:`gracias por contactar conmigo. Te confirmo que ya estás en mi lista de espera${paraServicio(serv)}. Estos son tus datos:`, lineas,
+    nota:"Cuando empecemos, la primera cita es la valoración funcional: entrevista, tests de fuerza, movilidad y función, e informe escrito con tu propuesta de programa. Después seguimos con sesiones individuales de 45 min, coordinadas con tu fisioterapeuta o médico. Te adjunto mis tarifas en PDF con todos los programas y precios (también puedes abrirlas en el enlace de arriba). Si cambia tu disponibilidad o ya no te interesa, responde a este correo y lo actualizo." };
+}
+function modalBienvenidaEspera(id){
+  const c = S.clientes[id]; if (!c) return;
+  const t = msgBienvenidaEspera(c), { pos, total } = puestoEspera(id);
+  openModal("Mensaje para la lista de espera", `${esc(c.nombre)} · puesto nº ${pos} de ${total}`,
+    `<p style="margin:0 0 10px;font-size:14px;color:var(--ink-2)">Envíale este mensaje para explicarle el proceso y en qué puesto está.</p><div class="msgbox">${esc(t)}</div>
+     ${c.telefono || c.email ? "" : `<div class="alert">No tiene móvil ni email. Copia el mensaje o añádelos con Editar.</div>`}`,
+    `<button class="btn ghost" data-close="1">Ahora no</button><div class="acts"><button class="btn icon" id="bcop" aria-label="Copiar">${ic("copy")}</button>${c.email ? `<button class="btn" id="bem">${ic("mail")}Email</button>` : ""}${c.telefono ? `<button class="btn wa" id="bwa">${ic("wa")}WhatsApp</button>` : ""}</div>`);
+  const hecho = () => patch("clientes", id, { mensajeEspera:todayStr(), ultimoContacto:todayStr() });
+  document.getElementById("bcop").onclick = () => { copiar(t); hecho(); closeModal(); };
+  if (c.email) document.getElementById("bem").onclick = () => { enviarEmail(id, emailBienvenidaEspera(S.clientes[id]), hecho); closeModal(); };
+  if (c.telefono) document.getElementById("bwa").onclick = () => { enviar(c.telefono, t, hecho); closeModal(); };
+}
+function msgEspera(c){
+  const serv = c.servicio && c.servicio !== "Otro" ? ` para empezar con ${c.servicio.toLowerCase().startsWith("valoración") ? "tu valoración funcional" : "el programa de " + c.servicio.toLowerCase()}` : "";
+  return `Hola ${c.nombre.split(" ")[0]}! 👋 Soy Patri S. Rodeiro, de ${LUGAR}. Estabas en mi lista de espera y ya tengo hueco${serv}. ¿Te viene bien que te proponga día y hora?\n\n${FIRMA}`;
+}
+function modalEspera(id){
+  const c = id ? S.clientes[id] : { nombre:"", telefono:"", email:"", servicio:"", disponibilidad:[], derivadoPor:"", prioridad:"normal", nota:"", altaEspera:todayStr() };
+  const disp = new Set(c.disponibilidad || []);
+  openModal(id ? c.nombre : "Añadir a la lista de espera", id ? `En espera desde el ${fechaLarga(c.altaEspera || todayStr())}` : "Datos iniciales para poder contactar cuando tengas hueco",
+    `<div class="f"><label for="wn">Nombre y apellidos</label><input id="wn" value="${esc(c.nombre)}" autocomplete="off"></div>
+     <div class="two"><div class="f"><label for="wt">Móvil</label><input id="wt" inputmode="tel" value="${esc(c.telefono || "")}" placeholder="600 123 456"></div>
+     <div class="f"><label for="we">Email</label><input id="we" type="email" inputmode="email" value="${esc(c.email || "")}" placeholder="nombre@correo.com"></div></div>
+     <div class="two"><div class="f"><label for="ws">Servicio que le interesa</label><select id="ws"><option value="">Sin indicar</option>${serviciosEspera().map(x => `<option ${x===c.servicio?"selected":""}>${x}</option>`).join("")}</select></div>
+     <div class="f"><label for="wd">Derivado por (opcional)</label><input id="wd" value="${esc(c.derivadoPor || "")}" placeholder="Ej.: fisio de DCF, Dr. López, Racing…"></div></div>
+     <div class="f"><span class="flabel">Disponibilidad</span><div class="seg" id="wdisp">${DISPONIBILIDAD.map(x => `<button type="button" data-v="${x}" aria-pressed="${disp.has(x)}">${x}</button>`).join("")}</div></div>
+     <div class="f"><span class="flabel">Prioridad</span><div class="seg" id="wprio"><button type="button" data-v="normal" aria-pressed="${c.prioridad !== "alta"}">Normal</button><button type="button" data-v="alta" aria-pressed="${c.prioridad === "alta"}">Prioritario</button></div><div class="hint">Por ejemplo, un postoperatorio que no puede esperar.</div></div>
+     <div class="two"><div class="f"><label for="wa">En espera desde</label><input id="wa" type="date" value="${esc(c.altaEspera || todayStr())}"></div>
+     <div class="f"><label for="wu">Último contacto</label><input id="wu" type="date" value="${esc(c.ultimoContacto || "")}"></div></div>
+     <div class="f"><label for="wno">Nota (opcional)</label><input id="wno" value="${esc(c.nota || "")}" placeholder="Ej.: llamar a partir de las 17:00"><div class="hint">No apuntes aquí datos de salud.</div></div>`,
+    `${id ? `<button class="btn danger" id="wdel">Quitar de la lista</button>` : "<span></span>"}<div class="acts"><button class="btn" data-close="1">Cancelar</button><button class="btn primary" id="wsave">${id ? "Guardar" : "Añadir"}</button></div>`);
+  const $ = q => document.getElementById(q);
+  const prio = { v: c.prioridad === "alta" ? "alta" : "normal" };
+  $("wdisp").onclick = e => { const x = e.target.closest("button"); if (!x) return; x.setAttribute("aria-pressed", x.getAttribute("aria-pressed") !== "true"); };
+  $("wprio").onclick = e => { const x = e.target.closest("button"); if (!x) return; prio.v = x.dataset.v; [...$("wprio").children].forEach(y => y.setAttribute("aria-pressed", y === x)); };
+  $("wsave").onclick = () => {
+    const nombre = $("wn").value.trim(); if (!nombre) return toast("Escribe el nombre");
+    const email = $("we").value.trim().toLowerCase(); if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return toast("Revisa el email");
+    if (!id) { const dup = Object.values(S.clientes).find(x => normNombre(x.nombre) === normNombre(nombre)); if (dup && !confirm(dup.espera ? `${dup.nombre} ya está en la lista de espera. ¿Añadir otra vez?` : `${dup.nombre} ya está en Clientes. ¿Añadir igualmente a la lista de espera?`)) return; }
+    const nuevoId = id || uid();
+    put("clientes", { ...(id ? S.clientes[id] : { id:nuevoId, grupo:"", dni:"", domicilio:"", tarifaId:"" }), espera:true, nombre, telefono:$("wt").value.trim(), email,
+      servicio:$("ws").value, derivadoPor:$("wd").value.trim(), disponibilidad:[...$("wdisp").children].filter(x => x.getAttribute("aria-pressed") === "true").map(x => x.dataset.v),
+      prioridad:prio.v, altaEspera:$("wa").value || todayStr(), ultimoContacto:$("wu").value || "", nota:$("wno").value.trim() });
+    if (id) { closeModal(); toast("Guardado"); } else { modalBienvenidaEspera(nuevoId); toast(`${nombre.split(" ")[0]} añadido a la lista de espera`); }
+  };
+  if (id) $("wdel").onclick = () => {
+    const tieneSes = ses().some(s => s.clienteId === id);
+    if (!confirm("¿Quitar a esta persona de la lista de espera? Se borrarán sus datos.")) return;
+    if (tieneSes) { patch("clientes", id, { espera:false }); } else remove("clientes", id);
+    closeModal();
+  };
+}
+function darCita(id){
+  const c = S.clientes[id]; if (!c) return;
+  const tipo = !c.servicio || /valoraci/i.test(c.servicio) || !ses().some(s => s.clienteId === id) ? "valoracion" : "sesion";
+  patch("clientes", id, { espera:false, salidaEspera:todayStr(), nota: [c.nota, c.servicio ? "Interés: " + c.servicio : ""].filter(Boolean).join(" · ") });
+  let f = addDays(new Date(),1); if (f.getDay() === 0) f = addDays(f,1);
+  modalSesion(null, ymd(f), "", { clienteId:id, tipo });
+  toast(`${c.nombre.split(" ")[0]} ha pasado a Clientes`);
+}
+
+/* ---------- Vista: Mes ---------- */
+function vMes(){
+  const [y,mm] = ui.month.split("-").map(Number), l = ses().filter(s => mkey(s.fecha) === ui.month);
+  const cuenta = e => l.filter(s => s.estado === e).length, cob = l.filter(cobrable), pend = cob.filter(s => !s.pagado).length;
+  let h = `<div class="phead"><div><h1>Resumen del mes</h1><p>${cap(MESES[mm-1])} ${y}</p></div><div class="pactions">
+    <div class="wknav"><button class="btn icon" data-month="-1" aria-label="Mes anterior">${ic("left")}</button><div class="lbl">${cap(MESES[mm-1])} ${y}</div><button class="btn icon" data-month="1" aria-label="Mes siguiente">${ic("right")}</button></div>
+    <button class="btn" data-export="${ui.month}">${ic("down")}Exportar a Excel</button></div></div>`;
+  h += `<div class="kpis">
+    <div class="kpi"><div class="v">${cuenta("hecha")}</div><div class="l">Sesiones hechas</div></div>
+    <div class="kpi"><div class="v">${cuenta("noshow")+cuenta("tarde")}</div><div class="l">No vino o canceló tarde</div></div>
+    <div class="kpi"><div class="v">${cob.length}</div><div class="l">Sesiones a cobrar</div></div>
+    <div class="kpi"><div class="v">${pend}</div><div class="l">Sin pagar</div></div></div>`;
+  const por = {}; l.forEach(s => (por[s.clienteId] ||= []).push(s));
+  const ids = Object.keys(por).sort(byName);
+  const body = ids.length ? `<div class="tbl"><table><thead><tr><th>Cliente</th><th class="n">Hechas</th><th class="n">No vino / tarde</th><th class="n">Canc. a tiempo</th><th class="n">Programadas</th><th>Pagos</th><th></th></tr></thead><tbody>` +
+    ids.map(id => { const x = por[id], c = e => x.filter(s => s.estado === e).length, p = x.filter(s => cobrable(s) && !s.pagado).length;
+      return `<tr><td><div style="display:flex;align-items:center;gap:11px"><div class="avatar">${esc(iniciales(cli(id).nombre))}</div><b>${esc(cli(id).nombre)}</b></div></td><td class="n">${c("hecha")}</td><td class="n">${c("noshow")+c("tarde")}</td><td class="n">${c("cancelada")}</td><td class="n">${c("programada")}</td><td>${p ? `<span class="pill unpaid">${p} sin pagar</span>` : `<span class="pill paid">Al día</span>`}</td><td class="n">${p ? `<button class="btn small" data-pagar="${id}" data-mes="${ui.month}">${ic("check")}Pagado</button>` : ""}</td></tr>`; }).join("") + `</tbody></table></div>`
+    : vacio("No hay sesiones en este mes.");
+  h += panel("Por cliente", ids.length, body);
+  const u = ultimaCopia();
+  h += `<section class="panel"><div class="ph"><h2>Copia de seguridad</h2><span class="hint">${u ? `Última: ${fechaLarga(u)}` : "Sin copias todavía"}</span></div><div class="pbpad">
+    <p style="margin:0 0 14px;color:var(--ink-2);font-size:14px;max-width:62ch">Guarda todos tus clientes y sesiones en un archivo de tu ordenador. Hazlo una vez a la semana y guárdalo en tu carpeta. Si algún día pierdes datos, restauras la copia y lo recuperas todo.</p>
+    <div class="acts" style="justify-content:flex-start"><button class="btn primary" data-backup="1">${ic("down")}Guardar copia en el ordenador</button><button class="btn" data-restore="1">${ic("up")}Restaurar una copia</button></div></div></section>`;
+  return h;
+}
+
+/* ---------- Modales ---------- */
+function openModal(title, sub, body, foot){
+  document.getElementById("modal").innerHTML = `<div class="back" data-close="1"><div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(title)}">
+    <div class="sh"><div><h3>${esc(title)}</h3>${sub?`<p>${sub}</p>`:""}</div><button class="btn icon ghost" data-close="1" aria-label="Cerrar">${ic("x")}</button></div>
+    <div class="sbody">${body}</div>${foot?`<div class="sfoot">${foot}</div>`:""}</div></div>`;
+  const f = document.querySelector(".sheet .sbody input, .sheet .sbody select"); if (f) f.focus();
+}
+function closeModal(){ document.getElementById("modal").innerHTML = ""; }
+document.getElementById("modal").addEventListener("click", e => { if (e.target.closest("[data-close]") && (e.target.classList.contains("back") || e.target.closest("button[data-close]"))) closeModal(); });
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeModal(); });
+
+function modalSesion(id, preFecha, preHora, pre){
+  pre = pre || {};
+  const s = id ? S.sesiones[id] : { clienteId:pre.clienteId || "", tipo:pre.tipo || "sesion", fecha:preFecha||ui.day, hora:preHora||"", estado:"programada", pagado:false, nota:"" };
+  const clientes = activos().sort((a,b) => a.nombre.localeCompare(b.nombre,"es"));
+  const estado = { v: s.estado };
+  let b = `<div class="f"><label for="mc">Cliente</label><select id="mc"><option value="">Elige un cliente…</option>${clientes.map(c => `<option value="${c.id}" ${c.id===s.clienteId?"selected":""}>${esc(c.nombre)}</option>`).join("")}<option value="__new">+ Cliente nuevo</option></select></div>
+    <div id="newcli" hidden><div class="two"><div class="f"><label for="nn">Nombre</label><input id="nn" autocomplete="off"></div><div class="f"><label for="nt">Móvil</label><input id="nt" inputmode="tel" autocomplete="off" placeholder="600 123 456"></div></div></div>
+    <div class="two"><div class="f"><label for="mf">Fecha</label><input id="mf" type="date" value="${s.fecha}"></div><div class="f"><label for="mh">Hora</label><select id="mh">${timeOptions(s.fecha, durDe(s)).map(t => `<option ${t===s.hora?"selected":""}>${t}</option>`).join("")}</select></div></div>`;
+  const tipoIni = esVal(s) ? "valoracion" : "sesion";
+  b = `<div class="f"><span class="flabel">Tipo</span><div class="seg" id="mtipo"><button type="button" data-v="sesion" aria-pressed="${tipoIni==="sesion"}">Sesión · 45 min</button><button type="button" data-v="valoracion" aria-pressed="${tipoIni==="valoracion"}">Valoración · 60 min · ${eur(precioValoracion())}</button></div></div>` + b;
+  const nIni = id ? numEf(s) : (s.clienteId ? sugerirNum(s.clienteId, s.fecha, s.hora) : { num:1, total:null });
+  b += `<div id="numbox" ${tipoIni==="valoracion" ? "hidden" : ""}><div class="numrow"><div class="f"><label for="mnum">Sesión nº</label><input id="mnum" type="number" min="1" inputmode="numeric" value="${nIni.num}"></div><span class="de">de</span><div class="f"><label for="mtot">Total</label><input id="mtot" type="number" min="1" inputmode="numeric" value="${nIni.total || ""}" placeholder="Suelta"></div></div>
+    <p style="font-size:12px;color:var(--muted);margin:-8px 0 14px">Se calcula sola: con tarifa mensual, cuenta las sesiones del mes; con bono, sigue la sesión anterior. Cámbialo solo si hace falta.</p></div>
+    <div class="f"><label for="mprecio">Precio (€)</label><input id="mprecio" type="number" min="0" step="0.01" inputmode="decimal" value="${s.precio != null && s.precio !== "" ? s.precio : ""}" placeholder=""><div class="hint" id="mprecioh"></div></div>`;
+  if (id) b += `<div class="f"><span class="flabel">Cómo fue</span><div class="seg" id="mseg">${Object.entries(ESTADOS).map(([k,v]) => `<button type="button" data-v="${k}" aria-pressed="${k===s.estado}">${v.t}</button>`).join("")}</div><div class="hint">Canceló a tiempo: sin recargo. No vino y Canceló tarde: con recargo.</div></div>`;
+  b += `<label class="check"><input type="checkbox" id="mp" ${s.pagado?"checked":""}> Pagado</label>
+    <div class="f"><label for="mn">Nota (opcional)</label><input id="mn" value="${esc(s.nota)}" placeholder="Ej.: paga en efectivo el viernes"><div class="hint">No apuntes aquí datos de salud.</div></div>`;
+  if (id) b += `<div class="f"><span class="flabel">Mensajes de WhatsApp</span><div class="msgs">
+      <div class="card"><b>Reserva ${s.reservaEnviada?'<span class="pill paid">Enviada</span>':""}</b><div class="acts"><button class="btn small wa" id="wres">${ic("wa")}WhatsApp</button><button class="btn small" id="eres">${ic("mail")}Email</button><button class="btn small icon" id="cres" aria-label="Copiar reserva">${ic("copy")}</button></div></div>
+      <div class="card"><b>Recordatorio ${s.recordatorioEnviado?'<span class="pill paid">Enviado</span>':""}</b><div class="acts"><button class="btn small wa" id="wrec">${ic("wa")}WhatsApp</button><button class="btn small" id="erec">${ic("mail")}Email</button><button class="btn small icon" id="crec" aria-label="Copiar recordatorio">${ic("copy")}</button></div></div></div></div>`;
+  if (id && s.estado === "programada" && s.fecha >= todayStr()) {
+    const w = [];
+    if (!s.reservaEnviada) w.push("la reserva");
+    if (s.fecha === siguienteLaborable() && !s.recordatorioEnviado) w.push("el recordatorio");
+    if (w.length) b = `<div class="mwarn">${ic("bell")}Aún no has enviado ${w.join(" ni ")}.</div>` + b;
+  }
+  const foot = `${id?`<button class="btn danger" id="mdel">Eliminar</button>`:"<span></span>"}<div class="acts"><button class="btn" data-close="1">Cancelar</button><button class="btn primary" id="msave">${id?"Guardar cambios":"Crear sesión"}</button></div>`;
+  if (id && s.modEn) b += `<p class="lastmod">Último cambio: ${s.modPor ? esc(s.modPor)+" · " : ""}${new Date(s.modEn).toLocaleString("es-ES",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}</p>`;
+  openModal(id ? cli(s.clienteId).nombre : "Nueva sesión", id ? `${cap(fechaLarga(s.fecha))} · ${s.hora}` : "", b, foot);
+  const $ = q => document.getElementById(q);
+  let numTocado = false; const tipoSel = { v: tipoIni };
+  const precioAuto = () => { const cid = $("mc").value; const tmp = { tipo:tipoSel.v, clienteId: cid && cid !== "__new" ? cid : "" }; const p = precioDe(tmp); $("mprecio").placeholder = /^\d/.test(p) ? p.replace(/\s?€$/, "") : ""; $("mprecioh").textContent = p ? `Por defecto: ${p}. Escribe otro importe solo si cambia.` : "Escribe el precio si quieres que aparezca."; };
+  const horasTipo = () => { const cur = $("mh").value; $("mh").innerHTML = timeOptions($("mf").value, DUR[tipoSel.v]).map(t => `<option ${t===cur?"selected":""}>${t}</option>`).join(""); };
+  $("mtipo").onclick = e => { const x = e.target.closest("button"); if (!x) return; tipoSel.v = x.dataset.v; [...$("mtipo").children].forEach(y => y.setAttribute("aria-pressed", y === x)); $("numbox").hidden = tipoSel.v === "valoracion"; horasTipo(); precioAuto(); };
+  $("mc").addEventListener("change", precioAuto); precioAuto();
+  $("mnum").oninput = $("mtot").oninput = () => { numTocado = true; };
+  const resugerir = () => { if (numTocado || id) return; const c = $("mc").value; const g = (c && c !== "__new") ? sugerirNum(c, $("mf").value, $("mh").value, id) : { num:1, total:null }; $("mnum").value = g.num; $("mtot").value = g.total || ""; };
+  $("mc").onchange = () => { $("newcli").hidden = $("mc").value !== "__new"; if (!$("newcli").hidden) $("nn").focus(); resugerir(); };
+  $("mh").addEventListener("change", resugerir);
+  $("mf").onchange = () => { setTimeout(resugerir); const cur = $("mh").value; $("mh").innerHTML = timeOptions($("mf").value, DUR[tipoSel.v]).map(t => `<option ${t===cur?"selected":""}>${t}</option>`).join(""); };
+  if ($("mseg")) $("mseg").onclick = e => { const x = e.target.closest("button"); if (!x) return; estado.v = x.dataset.v; [...$("mseg").children].forEach(y => y.setAttribute("aria-pressed", y === x)); };
+  if (id){
+    const tel = cli(s.clienteId).telefono;
+    $("wres").onclick = () => enviar(tel, msgReserva(S.sesiones[id]), () => patch("sesiones", id, {reservaEnviada:true}));
+    $("cres").onclick = () => { copiar(msgReserva(S.sesiones[id])); patch("sesiones", id, {reservaEnviada:true}); };
+    $("eres").onclick = () => enviarEmail(s.clienteId, emailReserva(S.sesiones[id]), () => patch("sesiones", id, {reservaEnviada:true}));
+    $("erec").onclick = () => enviarEmail(s.clienteId, emailRecordatorio(S.sesiones[id]), () => patch("sesiones", id, {recordatorioEnviado:true}));
+    $("wrec").onclick = () => enviar(tel, msgRecordatorio(S.sesiones[id]), () => patch("sesiones", id, {recordatorioEnviado:true}));
+    $("crec").onclick = () => { copiar(msgRecordatorio(S.sesiones[id])); patch("sesiones", id, {recordatorioEnviado:true}); };
+    $("mdel").onclick = () => { if (confirm("¿Eliminar esta sesión? Si el cliente canceló, mejor márcala como cancelada para que quede registrada.")) { remove("sesiones", id); closeModal(); } };
+  }
+  $("msave").onclick = () => {
+    let clienteId = $("mc").value;
+    if (clienteId === "__new"){ const nombre = $("nn").value.trim(); if (!nombre) return toast("Escribe el nombre del cliente"); clienteId = uid(); put("clientes", { id:clienteId, nombre, telefono:$("nt").value.trim(), nota:"" }); }
+    if (!clienteId) return toast("Elige un cliente");
+    const fecha = $("mf").value; if (!fecha) return toast("Elige una fecha");
+    if (parse(fecha).getDay() === 0) return toast("Los domingos no trabajas. Elige otro día.");
+    const hora = $("mh").value;
+    const a1 = toMin(hora), b1 = a1 + DUR[tipoSel.v];
+    if (b1 > endMin(fecha)) return toast(`A esa hora no cabe: termina a las ${fromMin(b1)} y cierras a las ${fromMin(endMin(fecha))}.`);
+    const choque = delDia(fecha).find(x => x.id !== id && activa(x) && toMin(x.hora) < b1 && a1 < toMin(x.hora) + durDe(x));
+    if (choque && !confirm(`Se solapa con la sesión de ${cli(choque.clienteId).nombre} a las ${choque.hora}. ¿Guardar igualmente?`)) return;
+    let num = parseInt($("mnum").value, 10), total = $("mtot").value ? parseInt($("mtot").value, 10) : null;
+    if (!num || num < 1) return toast("Pon el número de sesión");
+    if (total && num > total) return toast("El número de sesión no puede ser mayor que el total");
+    if (!numTocado) { num = id ? (S.sesiones[id].num || null) : null; total = id ? (S.sesiones[id].total || null) : null; }
+    const cambio = id && (S.sesiones[id].fecha !== fecha || S.sesiones[id].hora !== hora);
+    const obj = { ...(id ? S.sesiones[id] : { id:uid(), reservaEnviada:false, recordatorioEnviado:false }), clienteId, fecha, hora, tipo:tipoSel.v, precio: $("mprecio").value === "" ? null : parseFloat(String($("mprecio").value).replace(",", ".")), num: tipoSel.v === "valoracion" ? null : num, total: tipoSel.v === "valoracion" ? null : total, estado: id ? estado.v : "programada", pagado:$("mp").checked, nota:$("mn").value.trim() };
+    if (cambio) { obj.reservaEnviada = false; obj.recordatorioEnviado = false; }
+    put("sesiones", obj); ui.week = mondayOf(parse(fecha)); ui.day = fecha;
+    if (!id || cambio) modalEnviar(obj.id); else closeModal();
+  };
+}
+
+function modalEnviar(id){
+  const s = S.sesiones[id], c = cli(s.clienteId), t = msgReserva(s);
+  openModal("Sesión guardada", `Revisa los datos y envía la reserva a ${esc(c.nombre)} cuando quieras`,
+    `<div id="estadoEmail"></div><div class="msgbox">${esc(t)}</div>
+     <p style="font-size:12.5px;color:var(--muted);margin:0">No se envía nada hasta que pulses un botón. Si te has equivocado, pulsa <b>Ahora no</b>, corrige la sesión y envíala después desde la propia sesión o desde <b>Hoy → Reservas sin enviar</b>.</p>
+     ${c.telefono || c.email ? "" : `<div class="alert" style="margin-top:12px">Este cliente no tiene móvil ni email guardados. Copia el mensaje o añádelos en Clientes.</div>`}`,
+    `<button class="btn ghost" data-close="1">Ahora no</button><div class="acts"><button class="btn icon" id="ec" aria-label="Copiar">${ic("copy")}</button>${c.email ? `<button class="btn" id="em">${ic("mail")}Enviar email</button>` : ""}${c.telefono ? `<button class="btn wa" id="ew">${ic("wa")}WhatsApp</button>` : ""}</div>`);
+  const marcar = () => patch("sesiones", id, {reservaEnviada:true});
+  document.getElementById("ec").onclick = () => { copiar(t); marcar(); closeModal(); };
+  if (c.telefono) document.getElementById("ew").onclick = () => { enviar(c.telefono, t, marcar); closeModal(); };
+  if (c.email) document.getElementById("em").onclick = async e => {
+    const b = e.currentTarget;
+    if (!EMAIL_API) { enviarEmail(s.clienteId, emailReserva(S.sesiones[id]), marcar); closeModal(); return; }
+    b.disabled = true; b.innerHTML = `${ic("mail")}Enviando…`;
+    const ok = await enviarEmail(s.clienteId, emailReserva(S.sesiones[id]), marcar);
+    const el = document.getElementById("estadoEmail"); if (!el) return;
+    if (ok) { el.innerHTML = `<div class="alert" style="background:var(--green-soft);color:var(--green)">${ic("check")} Reserva enviada por email a ${esc(c.email)}.</div>`; b.innerHTML = `${ic("check")}Enviado`; }
+    else { el.innerHTML = `<div class="mwarn">No se ha podido enviar el email. Prueba otra vez o envíala por WhatsApp.</div>`; b.disabled = false; b.innerHTML = `${ic("mail")}Reintentar`; }
+  };
+}
+
+function modalCliente(id){
+  const c = id ? S.clientes[id] : { nombre:"", telefono:"", email:"", tarifaId:"", nota:"", grupo:"", dni:"", domicilio:"" }, mes = todayStr().slice(0,7);
+  const gruposExist = [...new Set(Object.values(S.clientes).map(x => x.grupo).filter(Boolean))].sort();
+  const suyas = id ? ses().filter(s => s.clienteId === id).sort(byTime) : [];
+  const delMes = suyas.filter(s => mkey(s.fecha) === mes), proximas = suyas.filter(s => s.fecha >= todayStr() && activa(s));
+  let b = `<div class="f"><label for="cn">Nombre</label><input id="cn" value="${esc(c.nombre)}"></div>
+    <div class="two"><div class="f"><label for="ct">Móvil</label><input id="ct" inputmode="tel" value="${esc(c.telefono)}" placeholder="600 123 456"><div class="hint">Sin prefijo se entiende +34.</div></div>
+    <div class="f"><label for="cem">Email</label><input id="cem" type="email" inputmode="email" autocomplete="off" value="${esc(c.email || "")}" placeholder="nombre@correo.com"></div></div>
+    <div class="two"><div class="f"><label for="cta">Tarifa</label><select id="cta"><option value="">Sin tarifa</option>${["sesion","mes","bono"].map(tp => { const l = S.tarifas.filter(t => tipoDe(t) === tp); return l.length ? `<optgroup label="${TIPOS[tp]}">${l.map(t => `<option value="${t.id}" ${t.id===c.tarifaId?"selected":""}>${esc(t.nombre)} · ${eur(t.precio)}${tp==="mes"?"/mes":""}</option>`).join("")}</optgroup>` : ""; }).join("")}</select><div class="hint">Aparece en la reserva. Las tarifas se editan en Clientes.</div></div>
+    <div class="f"><label for="cno">Nota (opcional)</label><input id="cno" value="${esc(c.nota)}" placeholder="Ej.: prefiere tardes"><div class="hint">Sin datos de salud.</div></div></div>
+    <div class="two"><div class="f"><label for="cgr">Grupo</label><input id="cgr" list="lgr" value="${esc(c.grupo || "")}" placeholder="Ej.: DCF, FDB, Online"><datalist id="lgr">${gruposExist.map(g => `<option value="${esc(g)}">`).join("")}</datalist></div>
+    <div class="f"><label for="cdni">DNI / NIE</label><input id="cdni" value="${esc(c.dni || "")}" autocomplete="off" placeholder="Para facturas"></div></div>
+    <div class="f"><label for="cdom">Domicilio</label><input id="cdom" value="${esc(c.domicilio || "")}" autocomplete="off" placeholder="Para facturas"></div>`;
+  if (id){
+    b += `<div class="f"><span class="flabel">Sesiones de ${MESES[Number(mes.slice(5))-1]}</span><div class="hist">${delMes.length ? delMes.map(s => `<div class="item"><div class="time">${s.hora}<small>${DABR[parse(s.fecha).getDay()]} ${parse(s.fecha).getDate()}</small></div><div class="who"><b style="font-weight:600;font-size:13.5px">Sesión ${etiquetaNum(s)}</b><span>${pills(s)||'<span class="pill prog">Programada</span>'}</span></div></div>`).join("") : `<p style="color:var(--muted);font-size:14px;margin:4px 0">Sin sesiones este mes.</p>`}</div></div>`;
+    b += `<div class="acts" style="justify-content:flex-start"><button class="btn wa" id="cplan" ${proximas.length?"":"disabled"}>${ic("wa")}Sesiones de la semana</button>${c.email ? `<button class="btn" id="cplanm" ${proximas.length?"":"disabled"}>${ic("mail")}Por email</button>` : ""}</div>`;
+  }
+  const foot = `${id?`<button class="btn danger" id="cdel">Eliminar</button>`:"<span></span>"}<div class="acts"><button class="btn" data-close="1">Cancelar</button><button class="btn primary" id="csave">Guardar</button></div>`;
+  openModal(id ? c.nombre : "Nuevo cliente", id ? `${suyas.filter(activa).length} sesiones registradas` : "", b, foot);
+  const $ = q => document.getElementById(q);
+  $("csave").onclick = () => { const nombre = $("cn").value.trim(); if (!nombre) return toast("Escribe el nombre"); const email = $("cem").value.trim(); if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return toast("Revisa el email");
+    put("clientes", { ...(id ? S.clientes[id] : { id:uid() }), nombre, telefono:$("ct").value.trim(), email, tarifaId:$("cta").value, nota:$("cno").value.trim(), grupo:$("cgr").value.trim(), dni:$("cdni").value.trim().toUpperCase(), domicilio:$("cdom").value.trim() }); closeModal(); };
+  if (id){
+    $("cdel").onclick = () => { if (suyas.length) return toast("Tiene sesiones registradas. Elimínalas antes o deja el cliente."); if (confirm("¿Eliminar este cliente?")) { remove("clientes", id); closeModal(); } };
+    $("cplan").onclick = () => { const t = msgSemana(id, mondayOf(parse(proximas[0].fecha))); if (t) enviar(c.telefono, t); };
+    if ($("cplanm")) $("cplanm").onclick = () => { const m = emailSemana(id, mondayOf(parse(proximas[0].fecha))); if (m) enviarEmail(id, m); };
+  }
+}
+
+function modalPlanSemanal(){
+  const lunes = ui.week, ini = ymd(lunes), fin = ymd(addDays(lunes,6));
+  const ids = [...new Set(ses().filter(s => s.fecha >= ini && s.fecha <= fin && activa(s)).map(s => s.clienteId))].sort(byName);
+  const marcar = cid => ses().filter(s => s.clienteId === cid && s.fecha >= ini && s.fecha <= fin && activa(s) && !s.reservaEnviada).forEach(s => patch("sesiones", s.id, {reservaEnviada:true}));
+  const body = ids.length ? ids.map(id => { const n = ses().filter(s => s.clienteId === id && s.fecha >= ini && s.fecha <= fin && activa(s)).length;
+    return `<div class="item" style="padding:10px 0"><div class="avatar">${esc(iniciales(cli(id).nombre))}</div><div class="who"><b>${esc(cli(id).nombre)}</b><span>${n} ${n===1?"sesión":"sesiones"}</span></div><div class="acts"><button class="btn small wa" data-pw="${id}">${ic("wa")}WhatsApp</button>${cli(id).email ? `<button class="btn small icon" data-pm="${id}" aria-label="Enviar por email">${ic("mail")}</button>` : ""}<button class="btn small icon" data-pc="${id}" aria-label="Copiar">${ic("copy")}</button></div></div>`; }).join("")
+    : `<p style="color:var(--muted)">No hay sesiones esta semana.</p>`;
+  openModal("Plan de la semana", "Un mensaje por cliente con todas sus sesiones", body, `<span></span><button class="btn" data-close="1">Cerrar</button>`);
+  document.querySelector(".sheet").addEventListener("click", e => {
+    const w = e.target.closest("[data-pw]"), c = e.target.closest("[data-pc]"), m = e.target.closest("[data-pm]");
+    if (m) { const id = m.dataset.pm; const em = emailSemana(id, lunes); if (em) enviarEmail(id, em, () => marcar(id)); m.innerHTML = ic("check"); }
+    if (w) { const id = w.dataset.pw; enviar(cli(id).telefono, msgSemana(id, lunes), () => marcar(id)); w.innerHTML = `${ic("check")}Enviado`; }
+    if (c) { const id = c.dataset.pc; copiar(msgSemana(id, lunes)); marcar(id); }
+  });
+}
+
+/* ---------- Acciones ---------- */
+document.getElementById("main").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return; const d = b.dataset;
+  if (d.open) return modalSesion(d.open);
+  if (d.new !== undefined) { const [f,h] = d.new.split("|"); return modalSesion(null, f, h); }
+  if (d.estado) return patch("sesiones", d.id, { estado:d.estado });
+  if (d.flag) return patch("sesiones", d.id, { [d.flag]:true });
+  if (d.wa) { const s = S.sesiones[d.id], rec = d.wa === "rec"; return enviar(cli(s.clienteId).telefono, rec ? msgRecordatorio(s) : msgReserva(s), () => patch("sesiones", s.id, rec ? {recordatorioEnviado:true} : {reservaEnviada:true})); }
+  if (d.mail) { const s = S.sesiones[d.id], rec = d.mail === "rec"; return enviarEmail(s.clienteId, rec ? emailRecordatorio(s) : emailReserva(s), () => patch("sesiones", s.id, rec ? {recordatorioEnviado:true} : {reservaEnviada:true})); }
+  if (d.tarifa !== undefined) return modalTarifa(d.tarifa || null);
+  if (d.cargar2026) return cargarTarifas2026();
+  if (d.espera !== undefined) return modalEspera(d.espera || null);
+  if (d.ecita) return darCita(d.ecita);
+  if (d.ebien) return modalBienvenidaEspera(d.ebien);
+  if (d.ewa) { const c = S.clientes[d.ewa]; return enviar(c.telefono, msgEspera(c), () => patch("clientes", c.id, { ultimoContacto:todayStr() })); }
+  if (d.importar) return document.getElementById("fileClientes").click();
+  if (d.copy) { const s = S.sesiones[d.id], rec = d.copy === "rec"; copiar(rec ? msgRecordatorio(s) : msgReserva(s)); return patch("sesiones", s.id, rec ? {recordatorioEnviado:true} : {reservaEnviada:true}); }
+  if (d.pagar) { const l = ses().filter(s => s.clienteId === d.pagar && cobrable(s) && !s.pagado && (!d.mes || mkey(s.fecha) === d.mes)); l.forEach(s => patch("sesiones", s.id, {pagado:true})); return toast(`${l.length} ${l.length===1?"sesión marcada":"sesiones marcadas"} como pagadas`); }
+  if (d.week !== undefined) { const n = Number(d.week); ui.week = n === 0 ? mondayOf(new Date()) : addDays(ui.week, 7*n); if (n === 0 && parse(todayStr()).getDay() === 0) ui.week = addDays(ui.week,7); ui.day = n === 0 && parse(todayStr()).getDay() !== 0 ? todayStr() : ymd(ui.week); return render(); }
+  if (d.day) { ui.day = d.day; return render(); }
+  if (d.month) { const [y,m] = ui.month.split("-").map(Number); ui.month = ymd(new Date(y, m-1+Number(d.month), 1)).slice(0,7); return render(); }
+  if (d.cliente !== undefined) return modalCliente(d.cliente || null);
+  if (d.copyweek) return copiarSemana();
+  if (d.plan) return modalPlanSemanal();
+  if (d.export) return exportar(d.export);
+  if (d.backup) return guardarCopia();
+  if (d.irpend) { const go = () => { const p = pendientes(); const el = document.getElementById(p.reservas ? "p-reservas" : "p-recs"); if (el) el.scrollIntoView({ behavior:"smooth", block:"start" }); };
+    if (ui.tab !== "hoy") { ui.tab = "hoy"; renderNav(); render(); } return setTimeout(go, 30); }
+  if (d.restore) return document.getElementById("fileRestore").click();
+});
+
+function copiarSemana(){
+  const pi = ymd(addDays(ui.week,-7)), pf = ymd(addDays(ui.week,-1));
+  const prev = ses().filter(s => s.fecha >= pi && s.fecha <= pf && activa(s));
+  if (!prev.length) return toast("La semana anterior no tiene sesiones");
+  if (!confirm(`Se copiarán ${prev.length} sesiones de la semana anterior a esta, con el mismo cliente, día y hora. ¿Continuar?`)) return;
+  let n = 0;
+  prev.sort(byTime).forEach(s => { const fecha = ymd(addDays(parse(s.fecha),7)); if (ses().some(x => x.fecha === fecha && x.hora === s.hora && activa(x))) return;
+    put("sesiones", { id:uid(), clienteId:s.clienteId, fecha, hora:s.hora, estado:"programada", pagado:false, nota:"", reservaEnviada:false, recordatorioEnviado:false }); n++; });
+  toast(`${n} sesiones copiadas. Envía el plan semanal a cada cliente.`);
+}
+
+async function descargar(nombre, texto, mime){
+  const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([texto],{type:mime})); a.download = nombre; document.body.appendChild(a); a.click(); a.remove(); return true;
+}
+async function exportar(mk){
+  const l = ses().filter(s => mkey(s.fecha) === mk).sort(byTime);
+  if (!l.length) return toast("No hay sesiones en este mes");
+  const q = v => `"${String(v).replace(/"/g,'""')}"`;
+  const filas = [["Fecha","Hora","Tipo","Cliente","Tarifa","Sesión","Precio","Estado","Se cobra","Pagado","Nota"].join(";")].concat(l.map(s => [s.fecha.split("-").reverse().join("/"), s.hora, esVal(s) ? "Valoración" : "Sesión", q(cli(s.clienteId).nombre), q(tarifaDe(s.clienteId) ? tarifaDe(s.clienteId).nombre : ""), etiquetaNum(s), q(precioDe(s)), ESTADOS[s.estado].t, cobrable(s)?"Sí":"No", s.pagado?"Sí":"No", q(s.nota||"")].join(";")));
+  await descargar(`sesiones-${mk}.csv`, "\uFEFF"+filas.join("\r\n"), "text/csv");
+}
+
+/* ---------- Copia de seguridad ---------- */
+function ultimaCopia(){ if (copiaCompartida && copiaCompartida.fecha) return copiaCompartida.fecha; try { return localStorage.getItem("psr_ultima_copia"); } catch(e){ return null; } }
+function diasDesdeCopia(){ const u = ultimaCopia(); return u ? Math.floor((parse(todayStr()) - parse(u)) / 86400000) : null; }
+async function guardarCopia(){
+  const datos = { app:"agenda-patri", version:1, guardado:new Date().toISOString(), clientes:Object.values(S.clientes), sesiones:Object.values(S.sesiones), tarifas:S.tarifas };
+  const ok = await descargar(`agenda-patri-${todayStr()}.json`, JSON.stringify(datos, null, 1), "application/json");
+  if (!ok) return;
+  try { localStorage.setItem("psr_ultima_copia", todayStr()); } catch(e){}
+  copiaCompartida = { fecha: todayStr(), por: me.name || null }; await sb.from("ajustes").upsert({ id:"copia", data:copiaCompartida });
+  toast("Copia guardada. Muévela a tu carpeta si no se guardó ahí directamente."); render();
+}
+document.getElementById("fileRestore").addEventListener("change", async e => {
+  const f = e.target.files[0]; e.target.value = ""; if (!f) return;
+  let d; try { d = JSON.parse(await f.text()); } catch(_){ return toast("Ese archivo no es una copia válida de la agenda."); }
+  if (d.app !== "agenda-patri" || !Array.isArray(d.clientes) || !Array.isArray(d.sesiones)) return toast("Ese archivo no es una copia válida de la agenda.");
+  if (!confirm(`Esta copia es del ${new Date(d.guardado).toLocaleDateString("es-ES")} y tiene ${d.clientes.length} clientes y ${d.sesiones.length} sesiones. Sustituirá lo que tienes ahora. ¿Restaurar?`)) return;
+  const nuevo = { clientes:{}, sesiones:{} };
+  d.clientes.forEach(c => { if (c && c.id) nuevo.clientes[c.id] = c; });
+  d.sesiones.forEach(s => { if (s && s.id) nuevo.sesiones[s.id] = s; });
+  nuevo.tarifas = S.tarifas; const viejo = S; S = nuevo; render(); toast("Restaurando…");
+  try {
+    for (const col of TABLAS){
+      const fuera = Object.keys(viejo[col]).filter(id => !nuevo[col][id]);
+      for (let i=0; i<fuera.length; i+=200){ const { error } = await sb.from(col).delete().in("id", fuera.slice(i,i+200)); if (error) throw error; }
+      const filas = Object.values(nuevo[col]).map(o => ({ id:o.id, data:o }));
+      for (let i=0; i<filas.length; i+=300){ const { error } = await sb.from(col).upsert(filas.slice(i,i+300)); if (error) throw error; }
+    }
+    if (Array.isArray(d.tarifas)) { S.tarifas = d.tarifas; await sb.from("ajustes").upsert({ id:"tarifas", data:{ lista:S.tarifas } }); render(); }
+    toast("Copia restaurada");
+  } catch(_){ toast("La restauración se ha cortado. Vuelve a restaurar la misma copia."); }
+});
+
+function toastLargo(t){ toast(t); clearTimeout(tt); tt = setTimeout(() => { const el = document.querySelector(".toast"); if (el) el.remove(); }, 15000); }
+let tt;
+function toast(t){ let el = document.querySelector(".toast"); if (!el){ el = document.createElement("div"); el.className = "toast"; el.setAttribute("role","status"); document.body.appendChild(el); } el.textContent = t; clearTimeout(tt); tt = setTimeout(() => el.remove(), 2800); }
+
+init();
+</script>
+</body>
+</html>

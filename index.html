@@ -59,7 +59,8 @@ main{max-width:1180px;margin:0 auto;padding:22px 18px 110px}
 .phead h1{margin:0;font-size:26px;font-weight:800;letter-spacing:-.02em;line-height:1.15}
 .phead p{margin:6px 0 0;font-size:11.5px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
 .pactions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px);z-index:20;display:grid;grid-template-columns:repeat(5,1fr)}
+nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px);z-index:20;display:grid;grid-template-columns:repeat(6,1fr)}
+@media (max-width:420px){nav.tabs button{font-size:10.5px}nav.tabs button svg.i{width:19px;height:19px}}
 nav.tabs button{background:none;border:0;padding:9px 4px 10px;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:12px;font-weight:600;color:var(--muted)}
 nav.tabs button svg.i{width:21px;height:21px}
 nav.tabs button{position:relative}
@@ -115,7 +116,8 @@ nav.tabs button[aria-current="page"] svg.i{filter:drop-shadow(0 3px 0 var(--acce
 
 /* KPIs */
 .kpis{display:grid;grid-template-columns:repeat(2,1fr);background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);margin-bottom:16px;overflow:hidden}
-@media (min-width:700px){.kpis{grid-template-columns:repeat(4,1fr)}}
+@media (min-width:700px){.kpis{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}}
+.kpi.link{cursor:pointer}.kpi.link:hover{background:var(--surface-2)}
 .kpi{padding:16px 18px;border-right:1px solid var(--line-2);border-bottom:1px solid var(--line-2)}
 .kpi .v{font-size:28px;font-weight:800;letter-spacing:-.02em;line-height:1.1}
 .kpi .v small{font-size:15px;font-weight:600;color:var(--muted)}
@@ -285,6 +287,8 @@ const IC = {
   semana:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
   clientes:'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-5.5 6.5-5.5s6.5 1.9 6.5 5.5"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M21.5 20c0-2.6-1.4-4.4-3.5-5.1"/>',
   valoraciones:'<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M9 11l2 2 4-4M9 17h6"/>',
+  espera:'<circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9.5 2.5h5"/>',
+  phone:'<path d="M5 4h3l2 5-2.5 1.5a11 11 0 0 0 6 6L15 14l5 2v3a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/>',
   mes:'<path d="M4 20V11M10 20V5M16 20v-6M21 20H3"/>',
   wa:'<path d="M20.5 12a8.5 8.5 0 0 1-12.6 7.4L3.5 20.5l1.1-4.2A8.5 8.5 0 1 1 20.5 12z"/>',
   copy:'<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h8"/>',
@@ -489,6 +493,9 @@ document.addEventListener("click", async e => { if (!e.target.closest("[data-log
 
 /* ---------- Consultas ---------- */
 const ses = () => Object.values(S.sesiones);
+const activos = () => Object.values(S.clientes).filter(c => !c.espera);
+const enEspera = () => Object.values(S.clientes).filter(c => c.espera).sort((a,b) => (b.prioridad === "alta") - (a.prioridad === "alta") || String(a.altaEspera||"").localeCompare(String(b.altaEspera||"")));
+const diasDesde = f => f ? Math.max(0, Math.round((parse(todayStr()) - parse(f)) / 86400000)) : 0;
 const cli = id => S.clientes[id] || { nombre:"Cliente borrado", telefono:"" };
 const byTime = (a,b) => (a.fecha+a.hora).localeCompare(b.fecha+b.hora);
 const byName = (a,b) => cli(a).nombre.localeCompare(cli(b).nombre,"es");
@@ -646,7 +653,8 @@ async function copiar(t){
 function enviar(tel, t, done){ window.open(waLink(tel,t), "_blank", "noopener"); if (done) done(); }
 
 /* ---------- Navegación ---------- */
-const TABS = [["hoy","Hoy"],["semana","Semana"],["clientes","Clientes"],["valoraciones","Valoraciones"],["mes","Mes"]];
+const TABS = [["hoy","Hoy"],["semana","Semana"],["clientes","Clientes"],["espera","Espera"],["valoraciones","Valoraciones"],["mes","Mes"]];
+const TAB_LARGO = { espera:"Lista de espera" };
 function pendientes(){
   const hoy = todayStr(), sig = siguienteLaborable();
   const reservas = ses().filter(s => s.estado === "programada" && s.fecha >= hoy && !s.reservaEnviada).length;
@@ -661,13 +669,15 @@ function avisosHtml(){
   return `<div class="avisos" role="status"><span style="display:flex;gap:10px;align-items:center">${ic("bell")}Tienes ${partes.join(" y ")}.</span><button class="btn small" data-irpend="1">Enviar ahora</button></div>`;
 }
 function actualizarAvisos(){
+  const ne = enEspera().length;
+  document.querySelectorAll('[data-tab="espera"]').forEach(b => { let x = b.querySelector(".badge"); if (ne) { if (!x) { x = document.createElement("span"); x.className = "badge"; x.style.background = "var(--blue-soft)"; x.style.color = "var(--blue)"; b.appendChild(x); } x.textContent = ne; } else if (x) x.remove(); });
   const n = pendientes().total;
   document.querySelectorAll('[data-tab="hoy"]').forEach(b => { let x = b.querySelector(".badge"); if (n) { if (!x) { x = document.createElement("span"); x.className = "badge"; b.appendChild(x); } x.textContent = n; } else if (x) x.remove(); });
   try { if (navigator.setAppBadge) { n ? navigator.setAppBadge(n) : navigator.clearAppBadge(); } } catch(e){}
 }
 function renderNav(){
-  const html = TABS.map(([k,l]) => `<button data-tab="${k}" ${ui.tab===k?'aria-current="page"':''}>${ic(k)}<span>${l}</span></button>`).join("");
-  document.getElementById("tabs").innerHTML = html; document.getElementById("sidenav").innerHTML = html; actualizarAvisos();
+  const btn = largo => TABS.map(([k,l]) => `<button data-tab="${k}" ${ui.tab===k?'aria-current="page"':''}>${ic(k)}<span>${largo && TAB_LARGO[k] || l}</span></button>`).join("");
+  document.getElementById("tabs").innerHTML = btn(false); document.getElementById("sidenav").innerHTML = btn(true); actualizarAvisos();
 }
 document.addEventListener("click", e => { const b = e.target.closest("[data-tab]"); if (!b) return; ui.tab = b.dataset.tab; renderNav(); render(); window.scrollTo(0,0); });
 
@@ -682,7 +692,7 @@ function render(){
   }
   const main = document.getElementById("main"), y = window.scrollY;
   const focusId = document.activeElement && document.activeElement.id;
-  main.innerHTML = ({ hoy:vHoy, semana:vSemana, clientes:vClientes, mes:vMes })[ui.tab]();
+  main.innerHTML = ({ hoy:vHoy, semana:vSemana, clientes:vClientes, espera:vEspera, mes:vMes })[ui.tab]();
   const ph = main.querySelector(".phead"); if (ph) ph.insertAdjacentHTML("afterend", avisosHtml());
   if (focusId === "qsearch"){ const i = document.getElementById("qsearch"); i.focus(); i.setSelectionRange(i.value.length, i.value.length); }
   window.scrollTo(0,y);
@@ -717,7 +727,8 @@ function vHoy(){
     <div class="kpi"><div class="v">${deHoy.filter(activa).length}</div><div class="l">Sesiones hoy</div></div>
     <div class="kpi"><div class="v">${semAct}<small> / ${CAPACIDAD}</small></div><div class="l">Esta semana</div><div class="bar"><i style="width:${Math.min(semAct/CAPACIDAD*100,100)}%"></i></div></div>
     <div class="kpi"><div class="v">${recPend}</div><div class="l">Recordatorios por enviar</div></div>
-    <div class="kpi"><div class="v">${pendPago}</div><div class="l">Sesiones sin pagar</div></div></div>`;
+    <div class="kpi"><div class="v">${pendPago}</div><div class="l">Sesiones sin pagar</div></div>
+    <div class="kpi link" data-tab="espera" role="button" tabindex="0"><div class="v">${enEspera().length}</div><div class="l">En lista de espera</div></div></div>`;
   if (!Object.keys(S.clientes).length) h += `<section class="panel"><div class="empty">${ic("clientes")}Empieza dando de alta a tus clientes en Clientes. Después planifica la semana en Semana.</div></section>`;
 
   const itemSes = (s, acts, sub) => `<div class="item wrap"><div class="time">${s.hora}${sub?`<small>${sub}</small>`:""}</div><div class="who"><b>${esc(cli(s.clienteId).nombre)} <span style="font-weight:500;color:var(--muted);font-size:13px">· ${etiquetaNum(s)}</span></b><span>${pills(s)||'<span class="pill prog">Programada</span>'}</span></div><div class="acts">${acts}</div></div>`;
@@ -733,6 +744,11 @@ function vHoy(){
   h += panel("Reservas sin enviar", sinReserva.length, sinReserva.length ? sinReserva.map(s => itemSes(s,
       `<button class="btn small wa" data-wa="res" data-id="${s.id}">${ic("wa")}WhatsApp</button>${cli(s.clienteId).email ? `<button class="btn small icon" data-mail="res" data-id="${s.id}" aria-label="Enviar por email">${ic("mail")}</button>` : ""}<button class="btn small icon" data-copy="res" data-id="${s.id}" aria-label="Copiar">${ic("copy")}</button><button class="btn small ghost" data-flag="reservaEnviada" data-id="${s.id}">Ya enviada</button>`,
       `${DABR[parse(s.fecha).getDay()]} ${parse(s.fecha).getDate()}`)).join("") : vacio("Todas las reservas están enviadas."), null, true, "p-reservas");
+  const esp = enEspera();
+  if (esp.length) {
+    const libres = Math.max(CAPACIDAD - semAct, 0);
+    h += panel("Lista de espera", esp.length, esp.slice(0,3).map(itemEspera).join("") + `<div class="item" style="justify-content:space-between"><span style="font-size:13.5px;color:var(--muted)">${libres ? `Tienes ${libres} ${libres===1?"hueco libre":"huecos libres"} esta semana.` : "Esta semana estás completa."}</span><button class="btn small" data-tab="espera">Ver toda la lista</button></div>`, null, false);
+  }
   const ids = Object.keys(deben).sort(byName);
   h += panel("Pendiente de pago", ids.length, ids.length ? ids.map(id => `<div class="item"><div class="avatar">${esc(iniciales(cli(id).nombre))}</div><div class="who"><b>${esc(cli(id).nombre)}</b><span>${deben[id].length} ${deben[id].length===1?"sesión":"sesiones"} sin pagar</span></div><div class="acts"><button class="btn small" data-pagar="${id}">${ic("check")}Marcar pagado</button></div></div>`).join("") : vacio("Nadie te debe nada."), null, true);
   return h + `</div>`;
@@ -795,7 +811,7 @@ function vSemana(){
 /* ---------- Vista: Clientes ---------- */
 function vClientes(){
   const mes = todayStr().slice(0,7), q = normNombre(ui.q);
-  const todos = Object.values(S.clientes).sort((a,b) => a.nombre.localeCompare(b.nombre,"es"));
+  const todos = activos().sort((a,b) => a.nombre.localeCompare(b.nombre,"es"));
   const grupos = [...new Set(todos.map(c => c.grupo).filter(Boolean))].sort();
   if (ui.grupo && !grupos.includes(ui.grupo)) ui.grupo = "";
   const l = todos.filter(c => (!ui.grupo || c.grupo === ui.grupo) && (!q || normNombre(c.nombre).includes(q) || (c.telefono||"").replace(/\s/g,"").includes(q.replace(/\s/g,"")) || (c.email||"").toLowerCase().includes(q) || (c.dni||"").toLowerCase().includes(q)));
@@ -933,6 +949,132 @@ document.addEventListener("change", e => {
   if (e.target.id === "fileClientes") { const f = e.target.files[0]; e.target.value = ""; if (f) importarClientes(f); }
 });
 
+/* ---------- Vista: Lista de espera ---------- */
+const DISPONIBILIDAD = ["Mañanas","Tardes","Sábados"];
+function serviciosEspera(){
+  const base = ["Valoración funcional", "Postoperatorio", "Vuelta al deporte", "Dolor persistente", "Salud activa", "Rendimiento presencial", "Entrenamiento online", "Plan mantenimiento", "Sesiones en pareja"];
+  return [...base, "Otro"];
+}
+function itemEspera(c){
+  const dias = diasDesde(c.altaEspera);
+  const info = [c.servicio, (c.disponibilidad || []).join(", "), c.derivadoPor ? "Derivado por " + c.derivadoPor : ""].filter(Boolean).map(esc).join(" · ");
+  const contacto = (c.ultimoContacto ? `Contactado ${diasDesde(c.ultimoContacto) === 0 ? "hoy" : "hace " + diasDesde(c.ultimoContacto) + " d"}` : "Sin contactar") + (c.mensajeEspera ? "" : ` · <span style="color:var(--amber);font-weight:600">Falta mensaje de bienvenida</span>`);
+  return `<div class="item wrap"><div class="avatar">${esc(iniciales(c.nombre))}</div><div class="who"><b>${esc(c.nombre)} ${c.prioridad === "alta" ? '<span class="pill red">Prioritario</span>' : ""}</b><span>${info || "Sin datos de servicio"}</span><span style="display:block;font-size:12.5px;color:var(--muted)">En espera ${dias === 0 ? "desde hoy" : `hace ${dias} ${dias===1?"día":"días"}`} · ${contacto}</span></div><div class="acts">
+    <button class="btn small" data-ebien="${c.id}">${ic("send")}${c.mensajeEspera ? "Reenviar info" : "Enviar info"}</button>
+    ${c.telefono ? `<button class="btn small wa" data-ewa="${c.id}" title="Avisar de que hay hueco">${ic("wa")}Hay hueco</button>` : ""}
+    <button class="btn small primary" data-ecita="${c.id}">Dar cita</button>
+    <button class="btn small" data-espera="${c.id}">Editar</button></div></div>`;
+}
+function vEspera(){
+  const l = enEspera();
+  const lunes = mondayOf(new Date()), ini = ymd(lunes), fin = ymd(addDays(lunes,6));
+  const libres = Math.max(CAPACIDAD - ses().filter(s => s.fecha >= ini && s.fecha <= fin && activa(s)).length, 0);
+  const prio = l.filter(c => c.prioridad === "alta").length;
+  const media = l.length ? Math.round(l.reduce((a,c) => a + diasDesde(c.altaEspera), 0) / l.length) : 0;
+  let h = `<div class="phead"><div><h1>Lista de espera</h1><p>${l.length} ${l.length===1?"persona":"personas"} esperando</p></div><div class="pactions"><button class="btn primary" data-espera="">${ic("plus")}Añadir a la lista</button></div></div>`;
+  h += `<div class="kpis"><div class="kpi"><div class="v">${l.length}</div><div class="l">En espera</div></div><div class="kpi"><div class="v">${prio}</div><div class="l">Prioritarios</div></div><div class="kpi"><div class="v">${media}<small> días</small></div><div class="l">Espera media</div></div><div class="kpi"><div class="v">${libres}</div><div class="l">Huecos libres esta semana</div></div></div>`;
+  if (!l.length) return h + `<section class="panel"><div class="empty">${ic("espera")}No tienes a nadie en espera. Cuando alguien quiera empezar y no tengas hueco, pulsa <b>Añadir a la lista</b>.</div></section>`;
+  h += panel("Por orden de llegada", null, l.map(itemEspera).join(""), "Los prioritarios van primero", false);
+  h += `<p style="font-size:13px;color:var(--muted);margin:4px 2px">Al pulsar <b>Dar cita</b>, la persona pasa a Clientes con todos sus datos y se abre la reserva (por defecto, la valoración de 60 min).</p>`;
+  return h;
+}
+const urlTarifas = () => new URL("tarifas-2026.pdf", location.href).href;
+function puestoEspera(id){ const l = enEspera(); return { pos: l.findIndex(c => c.id === id) + 1, total: l.length }; }
+function textoServicio(c){ return c.servicio && c.servicio !== "Otro" ? c.servicio : ""; }
+function paraServicio(serv){ return !serv ? "" : /valoraci/i.test(serv) ? " para tu valoración funcional" : " para el programa de " + serv.toLowerCase(); }
+function msgBienvenidaEspera(c){
+  const { pos } = puestoEspera(c.id), serv = textoServicio(c), online = /online/i.test(serv);
+  return `Hola ${c.nombre.split(" ")[0]}! 👋 Soy Patri S. Rodeiro, readaptadora de lesiones en ${LUGAR}.
+
+Te confirmo que ya estás en mi lista de espera${paraServicio(serv)}. Ahora mismo ocupas el puesto nº ${pos}.
+
+Así funciona:
+1️⃣ En cuanto tenga un hueco te escribo para proponerte día y hora.
+2️⃣ Empezamos con una valoración funcional (${online ? "por videollamada" : "60 min, " + eur(precioValoracion())}): entrevista, tests de fuerza, movilidad y función, e informe escrito con tu propuesta de programa.
+3️⃣ Después seguimos con sesiones individuales de 45 min, coordinadas con tu fisioterapeuta o médico.
+
+📄 Te envío también mis tarifas en PDF, con todos los programas y precios:
+${urlTarifas()}
+
+${online ? "" : `📍 ${LUGAR}\n\n`}Si cambia tu disponibilidad o ya no te interesa, respóndeme a este mensaje y lo actualizo.
+
+${FIRMA}`;
+}
+function emailBienvenidaEspera(c){
+  const { pos, total } = puestoEspera(c.id), serv = textoServicio(c), online = /online/i.test(serv);
+  const lineas = [["Tu puesto", `nº ${pos} de ${total}`]];
+  if (serv) lineas.push(["Servicio", serv]);
+  if ((c.disponibilidad || []).length) lineas.push(["Disponibilidad", c.disponibilidad.join(", ")]);
+  lineas.push(["Siguiente paso", "Te escribiré en cuanto tenga hueco para proponerte día y hora"]);
+  lineas.push(["Primera cita", online ? "Valoración funcional por videollamada" : `Valoración funcional · 60 min · ${eur(precioValoracion())}`]);
+  if (!online) lineas.push(["Lugar", LUGAR]);
+  lineas.push(["Tarifas", urlTarifas()]);
+  return { tipo:"espera", adjuntos:["tarifas-2026.pdf"], etiqueta:"Lista de espera", titulo:"Ya estás en mi lista de espera", nombre:c.nombre.split(" ")[0],
+    asunto:"Ya estás en la lista de espera · Patri S. Rodeiro",
+    intro:`gracias por contactar conmigo. Te confirmo que ya estás en mi lista de espera${paraServicio(serv)}. Estos son tus datos:`, lineas,
+    nota:"Cuando empecemos, la primera cita es la valoración funcional: entrevista, tests de fuerza, movilidad y función, e informe escrito con tu propuesta de programa. Después seguimos con sesiones individuales de 45 min, coordinadas con tu fisioterapeuta o médico. Te adjunto mis tarifas en PDF con todos los programas y precios (también puedes abrirlas en el enlace de arriba). Si cambia tu disponibilidad o ya no te interesa, responde a este correo y lo actualizo." };
+}
+function modalBienvenidaEspera(id){
+  const c = S.clientes[id]; if (!c) return;
+  const t = msgBienvenidaEspera(c), { pos, total } = puestoEspera(id);
+  openModal("Mensaje para la lista de espera", `${esc(c.nombre)} · puesto nº ${pos} de ${total}`,
+    `<p style="margin:0 0 10px;font-size:14px;color:var(--ink-2)">Envíale este mensaje para explicarle el proceso y en qué puesto está.</p><div class="msgbox">${esc(t)}</div>
+     ${c.telefono || c.email ? "" : `<div class="alert">No tiene móvil ni email. Copia el mensaje o añádelos con Editar.</div>`}`,
+    `<button class="btn ghost" data-close="1">Ahora no</button><div class="acts"><button class="btn icon" id="bcop" aria-label="Copiar">${ic("copy")}</button>${c.email ? `<button class="btn" id="bem">${ic("mail")}Email</button>` : ""}${c.telefono ? `<button class="btn wa" id="bwa">${ic("wa")}WhatsApp</button>` : ""}</div>`);
+  const hecho = () => patch("clientes", id, { mensajeEspera:todayStr(), ultimoContacto:todayStr() });
+  document.getElementById("bcop").onclick = () => { copiar(t); hecho(); closeModal(); };
+  if (c.email) document.getElementById("bem").onclick = () => { enviarEmail(id, emailBienvenidaEspera(S.clientes[id]), hecho); closeModal(); };
+  if (c.telefono) document.getElementById("bwa").onclick = () => { enviar(c.telefono, t, hecho); closeModal(); };
+}
+function msgEspera(c){
+  const serv = c.servicio && c.servicio !== "Otro" ? ` para empezar con ${c.servicio.toLowerCase().startsWith("valoración") ? "tu valoración funcional" : "el programa de " + c.servicio.toLowerCase()}` : "";
+  return `Hola ${c.nombre.split(" ")[0]}! 👋 Soy Patri S. Rodeiro, de ${LUGAR}. Estabas en mi lista de espera y ya tengo hueco${serv}. ¿Te viene bien que te proponga día y hora?\n\n${FIRMA}`;
+}
+function modalEspera(id){
+  const c = id ? S.clientes[id] : { nombre:"", telefono:"", email:"", servicio:"", disponibilidad:[], derivadoPor:"", prioridad:"normal", nota:"", altaEspera:todayStr() };
+  const disp = new Set(c.disponibilidad || []);
+  openModal(id ? c.nombre : "Añadir a la lista de espera", id ? `En espera desde el ${fechaLarga(c.altaEspera || todayStr())}` : "Datos iniciales para poder contactar cuando tengas hueco",
+    `<div class="f"><label for="wn">Nombre y apellidos</label><input id="wn" value="${esc(c.nombre)}" autocomplete="off"></div>
+     <div class="two"><div class="f"><label for="wt">Móvil</label><input id="wt" inputmode="tel" value="${esc(c.telefono || "")}" placeholder="600 123 456"></div>
+     <div class="f"><label for="we">Email</label><input id="we" type="email" inputmode="email" value="${esc(c.email || "")}" placeholder="nombre@correo.com"></div></div>
+     <div class="two"><div class="f"><label for="ws">Servicio que le interesa</label><select id="ws"><option value="">Sin indicar</option>${serviciosEspera().map(x => `<option ${x===c.servicio?"selected":""}>${x}</option>`).join("")}</select></div>
+     <div class="f"><label for="wd">Derivado por (opcional)</label><input id="wd" value="${esc(c.derivadoPor || "")}" placeholder="Ej.: fisio de DCF, Dr. López, Racing…"></div></div>
+     <div class="f"><span class="flabel">Disponibilidad</span><div class="seg" id="wdisp">${DISPONIBILIDAD.map(x => `<button type="button" data-v="${x}" aria-pressed="${disp.has(x)}">${x}</button>`).join("")}</div></div>
+     <div class="f"><span class="flabel">Prioridad</span><div class="seg" id="wprio"><button type="button" data-v="normal" aria-pressed="${c.prioridad !== "alta"}">Normal</button><button type="button" data-v="alta" aria-pressed="${c.prioridad === "alta"}">Prioritario</button></div><div class="hint">Por ejemplo, un postoperatorio que no puede esperar.</div></div>
+     <div class="two"><div class="f"><label for="wa">En espera desde</label><input id="wa" type="date" value="${esc(c.altaEspera || todayStr())}"></div>
+     <div class="f"><label for="wu">Último contacto</label><input id="wu" type="date" value="${esc(c.ultimoContacto || "")}"></div></div>
+     <div class="f"><label for="wno">Nota (opcional)</label><input id="wno" value="${esc(c.nota || "")}" placeholder="Ej.: llamar a partir de las 17:00"><div class="hint">No apuntes aquí datos de salud.</div></div>`,
+    `${id ? `<button class="btn danger" id="wdel">Quitar de la lista</button>` : "<span></span>"}<div class="acts"><button class="btn" data-close="1">Cancelar</button><button class="btn primary" id="wsave">${id ? "Guardar" : "Añadir"}</button></div>`);
+  const $ = q => document.getElementById(q);
+  const prio = { v: c.prioridad === "alta" ? "alta" : "normal" };
+  $("wdisp").onclick = e => { const x = e.target.closest("button"); if (!x) return; x.setAttribute("aria-pressed", x.getAttribute("aria-pressed") !== "true"); };
+  $("wprio").onclick = e => { const x = e.target.closest("button"); if (!x) return; prio.v = x.dataset.v; [...$("wprio").children].forEach(y => y.setAttribute("aria-pressed", y === x)); };
+  $("wsave").onclick = () => {
+    const nombre = $("wn").value.trim(); if (!nombre) return toast("Escribe el nombre");
+    const email = $("we").value.trim().toLowerCase(); if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return toast("Revisa el email");
+    if (!id) { const dup = Object.values(S.clientes).find(x => normNombre(x.nombre) === normNombre(nombre)); if (dup && !confirm(dup.espera ? `${dup.nombre} ya está en la lista de espera. ¿Añadir otra vez?` : `${dup.nombre} ya está en Clientes. ¿Añadir igualmente a la lista de espera?`)) return; }
+    const nuevoId = id || uid();
+    put("clientes", { ...(id ? S.clientes[id] : { id:nuevoId, grupo:"", dni:"", domicilio:"", tarifaId:"" }), espera:true, nombre, telefono:$("wt").value.trim(), email,
+      servicio:$("ws").value, derivadoPor:$("wd").value.trim(), disponibilidad:[...$("wdisp").children].filter(x => x.getAttribute("aria-pressed") === "true").map(x => x.dataset.v),
+      prioridad:prio.v, altaEspera:$("wa").value || todayStr(), ultimoContacto:$("wu").value || "", nota:$("wno").value.trim() });
+    if (id) { closeModal(); toast("Guardado"); } else { modalBienvenidaEspera(nuevoId); toast(`${nombre.split(" ")[0]} añadido a la lista de espera`); }
+  };
+  if (id) $("wdel").onclick = () => {
+    const tieneSes = ses().some(s => s.clienteId === id);
+    if (!confirm("¿Quitar a esta persona de la lista de espera? Se borrarán sus datos.")) return;
+    if (tieneSes) { patch("clientes", id, { espera:false }); } else remove("clientes", id);
+    closeModal();
+  };
+}
+function darCita(id){
+  const c = S.clientes[id]; if (!c) return;
+  const tipo = !c.servicio || /valoraci/i.test(c.servicio) || !ses().some(s => s.clienteId === id) ? "valoracion" : "sesion";
+  patch("clientes", id, { espera:false, salidaEspera:todayStr(), nota: [c.nota, c.servicio ? "Interés: " + c.servicio : ""].filter(Boolean).join(" · ") });
+  let f = addDays(new Date(),1); if (f.getDay() === 0) f = addDays(f,1);
+  modalSesion(null, ymd(f), "", { clienteId:id, tipo });
+  toast(`${c.nombre.split(" ")[0]} ha pasado a Clientes`);
+}
+
 /* ---------- Vista: Mes ---------- */
 function vMes(){
   const [y,mm] = ui.month.split("-").map(Number), l = ses().filter(s => mkey(s.fecha) === ui.month);
@@ -970,9 +1112,10 @@ function closeModal(){ document.getElementById("modal").innerHTML = ""; }
 document.getElementById("modal").addEventListener("click", e => { if (e.target.closest("[data-close]") && (e.target.classList.contains("back") || e.target.closest("button[data-close]"))) closeModal(); });
 document.addEventListener("keydown", e => { if (e.key === "Escape") closeModal(); });
 
-function modalSesion(id, preFecha, preHora){
-  const s = id ? S.sesiones[id] : { clienteId:"", fecha:preFecha||ui.day, hora:preHora||"", estado:"programada", pagado:false, nota:"" };
-  const clientes = Object.values(S.clientes).sort((a,b) => a.nombre.localeCompare(b.nombre,"es"));
+function modalSesion(id, preFecha, preHora, pre){
+  pre = pre || {};
+  const s = id ? S.sesiones[id] : { clienteId:pre.clienteId || "", tipo:pre.tipo || "sesion", fecha:preFecha||ui.day, hora:preHora||"", estado:"programada", pagado:false, nota:"" };
+  const clientes = activos().sort((a,b) => a.nombre.localeCompare(b.nombre,"es"));
   const estado = { v: s.estado };
   let b = `<div class="f"><label for="mc">Cliente</label><select id="mc"><option value="">Elige un cliente…</option>${clientes.map(c => `<option value="${c.id}" ${c.id===s.clienteId?"selected":""}>${esc(c.nombre)}</option>`).join("")}<option value="__new">+ Cliente nuevo</option></select></div>
     <div id="newcli" hidden><div class="two"><div class="f"><label for="nn">Nombre</label><input id="nn" autocomplete="off"></div><div class="f"><label for="nt">Móvil</label><input id="nt" inputmode="tel" autocomplete="off" placeholder="600 123 456"></div></div></div>
@@ -1115,6 +1258,10 @@ document.getElementById("main").addEventListener("click", e => {
   if (d.mail) { const s = S.sesiones[d.id], rec = d.mail === "rec"; return enviarEmail(s.clienteId, rec ? emailRecordatorio(s) : emailReserva(s), () => patch("sesiones", s.id, rec ? {recordatorioEnviado:true} : {reservaEnviada:true})); }
   if (d.tarifa !== undefined) return modalTarifa(d.tarifa || null);
   if (d.cargar2026) return cargarTarifas2026();
+  if (d.espera !== undefined) return modalEspera(d.espera || null);
+  if (d.ecita) return darCita(d.ecita);
+  if (d.ebien) return modalBienvenidaEspera(d.ebien);
+  if (d.ewa) { const c = S.clientes[d.ewa]; return enviar(c.telefono, msgEspera(c), () => patch("clientes", c.id, { ultimoContacto:todayStr() })); }
   if (d.importar) return document.getElementById("fileClientes").click();
   if (d.copy) { const s = S.sesiones[d.id], rec = d.copy === "rec"; copiar(rec ? msgRecordatorio(s) : msgReserva(s)); return patch("sesiones", s.id, rec ? {recordatorioEnviado:true} : {reservaEnviada:true}); }
   if (d.pagar) { const l = ses().filter(s => s.clienteId === d.pagar && cobrable(s) && !s.pagado && (!d.mes || mkey(s.fecha) === d.mes)); l.forEach(s => patch("sesiones", s.id, {pagado:true})); return toast(`${l.length} ${l.length===1?"sesión marcada":"sesiones marcadas"} como pagadas`); }

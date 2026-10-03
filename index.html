@@ -4,6 +4,30 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Agenda · Patri S. Rodeiro</title>
+<script>
+/* Si algo falla al arrancar, mostrarlo en pantalla en vez de dejarla en blanco */
+(function(){
+  function mostrar(msg){
+    if (window.__agendaOK) return;
+    var d = document.getElementById("errorArranque");
+    if (!d) { d = document.createElement("div"); d.id = "errorArranque";
+      d.style.cssText = "position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:24px;background:#14213D;z-index:9999;font-family:Arial,sans-serif";
+      (document.body || document.documentElement).appendChild(d); }
+    d.innerHTML = '<div style="background:#fff;color:#14213D;border-radius:16px;padding:24px;max-width:440px;width:100%"><h3 style="margin:0 0 10px">La agenda no ha podido arrancar</h3>'
+      + '<p style="margin:0 0 12px;line-height:1.5">Hazle una captura a esta pantalla y envíasela a Claude.</p>'
+      + '<p style="margin:0 0 16px;font-size:13px;background:#F3F4F7;border-radius:8px;padding:10px;word-break:break-word"><b>Detalle:</b> ' + String(msg).replace(/[<>&]/g, "") + '</p>'
+      + '<button onclick="location.reload()" style="font:inherit;font-weight:bold;background:#F5B700;border:0;border-radius:9px;padding:10px 16px">Volver a intentar</button></div>';
+  }
+  window.__mostrarErrorArranque = mostrar;
+  window.addEventListener("error", function(e){ mostrar((e.message || "Error") + (e.filename ? " · " + e.filename.split("/").pop() + ":" + e.lineno : "")); });
+  window.addEventListener("unhandledrejection", function(e){ mostrar(e.reason && (e.reason.message || e.reason) || "Error desconocido"); });
+  setTimeout(function(){
+    var L = document.getElementById("login"), A = document.getElementById("app");
+    var visible = (L && !L.hidden && L.style.display !== "none") || (A && !A.hidden);
+    if (!visible) mostrar("La aplicación no ha terminado de cargar en 12 segundos. Puede ser la conexión, que config.js no esté bien o que Supabase no responda.");
+  }, 12000);
+})();
+</script>
 <meta name="theme-color" content="#14213D">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="favicon.png" type="image/png">
@@ -416,7 +440,7 @@ function escuchar(){
 /* ---------- Acceso ---------- */
 function pantallaLogin(modo){
   document.getElementById("app").hidden = true;
-  const L = document.getElementById("login"); L.hidden = false; L.style.display = "";
+  const L = document.getElementById("login"); L.hidden = false; L.style.display = ""; window.__agendaOK = true;
   const recuperar = modo === "nueva";
   L.innerHTML = `<form class="box" id="lf" novalidate>
     <div class="head"><img src="logo.png" alt="Patri S. Rodeiro · Readaptación y rendimiento" width="900" height="225"></div><p class="eyebrow" style="margin:-8px 0 16px">Agenda</p>
@@ -459,11 +483,17 @@ function pantallaLogin(modo){
 }
 let arrancada = false;
 async function arrancar(){
-  const { data:{ user } } = await sb.auth.getUser();
+  try { await arrancarInterno(); }
+  catch(e) { console.error(e); window.__mostrarErrorArranque && window.__mostrarErrorArranque("Al entrar: " + (e && e.message || e)); }
+}
+async function arrancarInterno(){
+  const { data:{ user }, error:errUser } = await sb.auth.getUser();
+  if (errUser && !/session|missing|not found|jwt/i.test(errUser.message || "")) console.warn(errUser);
   if (!user) return pantallaLogin();
   me = { id:user.id, name:(user.user_metadata && user.user_metadata.nombre) || "" };
   const L = document.getElementById("login"); L.hidden = true; L.style.display = "none"; L.innerHTML = "";
   const A = document.getElementById("app"); A.hidden = false; A.style.display = "";
+  window.__agendaOK = true; const ea = document.getElementById("errorArranque"); if (ea) ea.remove();
   const quien = document.getElementById("quien"); quien.textContent = me.name || user.email; quien.hidden = false;
   renderNav(); render();
   await cargarTodo();
@@ -487,7 +517,7 @@ async function init(){
     const T = {
       noconfig: ["No se puede leer config.js", "El archivo <b>config.js</b> no existe en GitHub o tiene un error de escritura (suele ser una coma o unas comillas que faltan, sobre todo tras añadir la línea <code>EMAIL_API</code>)."],
       vacio: ["config.js está sin rellenar", "El <b>config.js</b> que hay en GitHub tiene los textos <code>PEGA_AQUI…</code>. Seguramente se ha sustituido por el de ejemplo al subir archivos. Vuelve a poner tu URL y tu clave de Supabase."],
-      url: ["La URL de config.js no es correcta", `La URL debe tener la forma <code>https://xxxx.supabase.co</code>, sin nada detrás. Ahora pone: <code>${esc(CONFIG.SUPABASE_URL)}</code>`],
+      url: ["La URL de config.js no es correcta", `La URL debe tener la forma <code>https://xxxx.supabase.co</code>, sin nada detrás. Ahora pone: <code>${esc(window.CONFIG && window.CONFIG.SUPABASE_URL || "")}</code>`],
       libreria: ["No se ha podido cargar Supabase", "Revisa tu conexión a internet y recarga la página. Si sigue pasando, puede que un bloqueador de anuncios esté bloqueando <code>cdn.jsdelivr.net</code>."]
     }[fallo];
     document.getElementById("login").hidden = false; document.getElementById("login").style.display = "";
@@ -702,7 +732,8 @@ function render(){
   }
   const main = document.getElementById("main"), y = window.scrollY;
   const focusId = document.activeElement && document.activeElement.id;
-  main.innerHTML = ({ hoy:vHoy, semana:vSemana, clientes:vClientes, espera:vEspera, mes:vMes })[ui.tab]();
+  try { main.innerHTML = ({ hoy:vHoy, semana:vSemana, clientes:vClientes, espera:vEspera, mes:vMes })[ui.tab](); }
+  catch(e) { console.error(e); main.innerHTML = `<section class="panel"><div class="pbpad"><h2 style="margin:0 0 8px">Esta sección no se ha podido mostrar</h2><p style="margin:0 0 10px">Hazle una captura y envíasela a Claude.</p><p style="font-size:13px;background:var(--surface-2);padding:10px;border-radius:8px;margin:0"><b>Detalle:</b> ${esc(e && e.message || e)}</p></div></section>`; return; }
   const ph = main.querySelector(".phead"); if (ph) ph.insertAdjacentHTML("afterend", avisosHtml());
   if (focusId === "qsearch"){ const i = document.getElementById("qsearch"); i.focus(); i.setSelectionRange(i.value.length, i.value.length); }
   window.scrollTo(0,y);

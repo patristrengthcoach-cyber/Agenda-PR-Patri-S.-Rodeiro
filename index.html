@@ -479,9 +479,19 @@ function pedirNombre(){
   };
 }
 async function init(){
-  if (!window.supabase || !window.CONFIG || !CONFIG.SUPABASE_URL || CONFIG.SUPABASE_URL.includes("PEGA")) {
-    document.getElementById("login").hidden = false;
-    document.getElementById("login").innerHTML = `<div class="box"><h3 style="margin-top:0">Falta configurar la app</h3><p>Rellena el archivo <b>config.js</b> con la URL y la clave de tu proyecto de Supabase. Tienes los pasos en LEEME.md.</p></div>`;
+  const fallo = !window.CONFIG ? "noconfig"
+    : (!CONFIG.SUPABASE_URL || /PEGA/i.test(CONFIG.SUPABASE_URL) || !CONFIG.SUPABASE_ANON_KEY || /PEGA/i.test(CONFIG.SUPABASE_ANON_KEY)) ? "vacio"
+    : !/^https:\/\/[a-z0-9]+\.supabase\.co\/?$/i.test(CONFIG.SUPABASE_URL.trim()) ? "url"
+    : !window.supabase ? "libreria" : "";
+  if (fallo) {
+    const T = {
+      noconfig: ["No se puede leer config.js", "El archivo <b>config.js</b> no existe en GitHub o tiene un error de escritura (suele ser una coma o unas comillas que faltan, sobre todo tras añadir la línea <code>EMAIL_API</code>)."],
+      vacio: ["config.js está sin rellenar", "El <b>config.js</b> que hay en GitHub tiene los textos <code>PEGA_AQUI…</code>. Seguramente se ha sustituido por el de ejemplo al subir archivos. Vuelve a poner tu URL y tu clave de Supabase."],
+      url: ["La URL de config.js no es correcta", `La URL debe tener la forma <code>https://xxxx.supabase.co</code>, sin nada detrás. Ahora pone: <code>${esc(CONFIG.SUPABASE_URL)}</code>`],
+      libreria: ["No se ha podido cargar Supabase", "Revisa tu conexión a internet y recarga la página. Si sigue pasando, puede que un bloqueador de anuncios esté bloqueando <code>cdn.jsdelivr.net</code>."]
+    }[fallo];
+    document.getElementById("login").hidden = false; document.getElementById("login").style.display = "";
+    document.getElementById("login").innerHTML = `<div class="box"><h3 style="margin-top:0">${T[0]}</h3><p style="line-height:1.55">${T[1]}</p><p style="font-size:13px;color:var(--muted)">Código: ${fallo}</p></div>`;
     return;
   }
   sb = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);

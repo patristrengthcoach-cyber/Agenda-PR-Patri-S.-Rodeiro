@@ -1188,18 +1188,23 @@ function modalSesion(id, preFecha, preHora, pre){
 
 function modalEnviar(id){
   const s = S.sesiones[id], c = cli(s.clienteId), t = msgReserva(s);
-  const auto = EMAIL_API && c.email;
-  openModal("Sesión guardada", auto ? `Enviando la reserva por email a ${esc(c.email)}…` : `Envía la reserva a ${esc(c.nombre)}`,
-    `<div id="estadoEmail"></div><div class="msgbox">${esc(t)}</div>${c.telefono || c.email ? "" : `<div class="alert">Este cliente no tiene móvil ni email guardados. Copia el mensaje o añádelos en Clientes.</div>`}`,
-    `<button class="btn ghost" data-close="1">${auto ? "Cerrar" : "Ahora no"}</button><div class="acts"><button class="btn icon" id="ec" aria-label="Copiar">${ic("copy")}</button>${c.email && !auto ? `<button class="btn" id="em">${ic("mail")}Email</button>` : ""}<button class="btn wa" id="ew">${ic("wa")}WhatsApp</button></div>`);
+  openModal("Sesión guardada", `Revisa los datos y envía la reserva a ${esc(c.nombre)} cuando quieras`,
+    `<div id="estadoEmail"></div><div class="msgbox">${esc(t)}</div>
+     <p style="font-size:12.5px;color:var(--muted);margin:0">No se envía nada hasta que pulses un botón. Si te has equivocado, pulsa <b>Ahora no</b>, corrige la sesión y envíala después desde la propia sesión o desde <b>Hoy → Reservas sin enviar</b>.</p>
+     ${c.telefono || c.email ? "" : `<div class="alert" style="margin-top:12px">Este cliente no tiene móvil ni email guardados. Copia el mensaje o añádelos en Clientes.</div>`}`,
+    `<button class="btn ghost" data-close="1">Ahora no</button><div class="acts"><button class="btn icon" id="ec" aria-label="Copiar">${ic("copy")}</button>${c.email ? `<button class="btn" id="em">${ic("mail")}Enviar email</button>` : ""}${c.telefono ? `<button class="btn wa" id="ew">${ic("wa")}WhatsApp</button>` : ""}</div>`);
   const marcar = () => patch("sesiones", id, {reservaEnviada:true});
-  if (auto) enviarEmail(s.clienteId, emailReserva(S.sesiones[id]), marcar).then(ok => {
-    const el = document.getElementById("estadoEmail"); if (!el) return;
-    el.innerHTML = ok ? `<div class="alert" style="background:var(--green-soft);color:var(--green)">${ic("check")} Reserva enviada por email. Si quieres, mándala también por WhatsApp.</div>` : `<div class="mwarn">No se ha podido enviar el email. Envíala por WhatsApp.</div>`;
-  });
-  if (c.email && !auto) document.getElementById("em").onclick = () => { enviarEmail(s.clienteId, emailReserva(S.sesiones[id]), marcar); closeModal(); };
   document.getElementById("ec").onclick = () => { copiar(t); marcar(); closeModal(); };
-  document.getElementById("ew").onclick = () => { enviar(c.telefono, t, marcar); closeModal(); };
+  if (c.telefono) document.getElementById("ew").onclick = () => { enviar(c.telefono, t, marcar); closeModal(); };
+  if (c.email) document.getElementById("em").onclick = async e => {
+    const b = e.currentTarget;
+    if (!EMAIL_API) { enviarEmail(s.clienteId, emailReserva(S.sesiones[id]), marcar); closeModal(); return; }
+    b.disabled = true; b.innerHTML = `${ic("mail")}Enviando…`;
+    const ok = await enviarEmail(s.clienteId, emailReserva(S.sesiones[id]), marcar);
+    const el = document.getElementById("estadoEmail"); if (!el) return;
+    if (ok) { el.innerHTML = `<div class="alert" style="background:var(--green-soft);color:var(--green)">${ic("check")} Reserva enviada por email a ${esc(c.email)}.</div>`; b.innerHTML = `${ic("check")}Enviado`; }
+    else { el.innerHTML = `<div class="mwarn">No se ha podido enviar el email. Prueba otra vez o envíala por WhatsApp.</div>`; b.disabled = false; b.innerHTML = `${ic("mail")}Reintentar`; }
+  };
 }
 
 function modalCliente(id){
